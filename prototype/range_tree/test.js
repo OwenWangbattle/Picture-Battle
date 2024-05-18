@@ -89,6 +89,8 @@ const test_once = (size, length, query_st, myClass, debug) => {
             console.log(points);
             console.log(query);
             console.log(result);
+            console.log(brute.queryAll(query));
+            myTree.print();
         }
         return false;
     }
@@ -138,8 +140,16 @@ const main = async () => {
         batch: 1000,
     };
 
-    // console.log("test for 2D Range Tree:");
-    // run_test(config, my2DRangeTree);
+    // const config = {
+    //     query: "random",
+    //     size: 100,
+    //     length: 10,
+    //     times: 10000,
+    //     batch: 1000,
+    // };
+
+    console.log("test for 2D Range Tree:");
+    run_test(config, my2DRangeTree);
     console.log("test for 2D Binary Search:");
     run_test(config, my2DBinarySearch);
 };
