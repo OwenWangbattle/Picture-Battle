@@ -35,7 +35,7 @@ app.post('/edge', upload.single('image'), async (req, res) => {
     }
 
     await new Promise((resolve, reject) => {
-        const pythonProcess = spawn('python3', ['./test.py', `./uploads/${req.file.filename}`]);
+        const pythonProcess = spawn('python', ['./test.py', `./uploads/${req.file.filename}`]);
 
         // Listen for stdout data from the Python script
         pythonProcess.stdout.on('data', (data) => {
