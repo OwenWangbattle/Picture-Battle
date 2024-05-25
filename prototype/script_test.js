@@ -353,7 +353,7 @@ let handleKeyDown = null;
 let handleKeyUp = null;
 
 class Player {
-    constructor(x, y) {
+    constructor(x, y, points) {
         this.x = x;
         this.y = y;
 
@@ -378,35 +378,37 @@ class Player {
             jump: false,
             release: false,
         };
+        this.tree = new my2DBinarySearch(points);
+        console.log(typeof(this.tree))
     }
-    collision_Left_x(tree){
+    collision_Left_x(tree, nextX, nextY){
         let query = {
-            topLeft: { x: this.x - 1, y: this.y - 1},
-            bottomRight: { x: this.x - 1, y: this.y + this.height + 1},
+            topLeft: { x: Math.min(nextX, this.x), y: Math.min(this.y, nextY)},
+            bottomRight: { x: Math.max(nextX, this.x), y: Math.max(this.y, nextY) + this.height},
         };
-        if (tree.queryAll(query) !== null) return true;
+        if (tree.queryExist(query) !== null) return true;
         return false;
     }
-    collision_Right_x(tree){
+    collision_Right_x(tree, nextX, nextY){
         let query = {
-            topLeft: { x: this.x + this.width + 1, y: this.y - 1},
-            bottomRight: { x: this.x + this.width + 1, y: this.y + this.height + 1},
+            topLeft: { x: Math.min(this.x, nextX) + this.width, y: Math.min(this.y, nextY)},
+            bottomRight: { x: Math.max(this.x, nextX) + this.width, y: Math.max(this.y, nextY) + this.height},
         };
-        if (tree.queryAll(query) !== null) return true;
+        if (tree.queryExist(query) !== null) return true;
         return false;
     }
-    collision_Top_y(tree){
+    collision_Top_y(tree, nextX, nextY){
         let query = {
-            topLeft: { x: this.x - 1, y: this.y - 1 },
-            bottomRight: { x: this.x + this.width + 1, y: this.y - 1},
+            topLeft: { x: Math.min(nextX, this.x), y: Math.min(this.y, nextY)},
+            bottomRight: { x: Math.max(this.x, nextX) + this.width, y: Math.max(this.y, nextY)},
         };
         if (tree.queryExist(query) !== false) return true;
         return false;
     }
-    collision_Bottom_y(tree){
+    collision_Bottom_y(tree, nextX, nextY){
         let query = {
-            topLeft: { x: this.x - 1, y: this.y + this.height + 1 },
-            bottomRight: { x: this.x + this.width + 1, y: this.y + this.height + 1 },
+            topLeft: { x: Math.min(nextX, this.x), y: Math.min(this.y, nextY)+ this.height },
+            bottomRight: { x: Math.max(this.x, nextX) + this.width, y: Math.max(this.y, nextY) + this.height },
         };
         if (tree.queryExist(query) !== false) return true;
         return false;
@@ -443,14 +445,9 @@ class Player {
 
         let flag = true;
         
-        let points = [];
-        for (const pixel of pixels) {
-            points.push({x: pixel[1], y: pixel[0] });
-        }
         // detect collision
-        let tempbs2d = new my2DBinarySearch(points);
-        let xCollision = this.collision_Left_x(tempbs2d) || this.collision_Right_x(tempbs2d);
-        let yCollision = this.collision_Top_y(tempbs2d) || this.collision_Bottom_y(tempbs2d);
+        let xCollision = this.collision_Left_x(this.tree, nextX, nextY) || this.collision_Right_x(this.tree, nextX, nextY);
+        let yCollision = this.collision_Top_y(this.tree, nextX, nextY) || this.collision_Bottom_y(this.tree, nextX, nextY);
         console.log(xCollision, yCollision);
         let bothCollision = xCollision && yCollision;
         // for (const pixel of pixels) {
@@ -518,8 +515,11 @@ const start = async (edges) => {
     for (const edge of edges) {
         ctx.fillRect(edge[1], edge[0], 1, 1);
     }
-
-    const player = new Player(20, 20);
+    let points = [];
+    for (const pixel of edges) {
+        points.push({x: pixel[1], y: pixel[0] });
+    }
+    const player = new Player(20, 20, points);
 
     if (intervalID) clearInterval(intervalID);
     intervalID = setInterval(() => {
