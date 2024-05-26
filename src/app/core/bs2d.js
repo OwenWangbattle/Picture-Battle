@@ -335,11 +335,4 @@ my2DBinarySearch.prototype.queryRightX = function (query) {
 
     return null;
 };
-my2DBinarySearch.prototype.queryXY = function (query, hspeed, vspeed) {
-    if(hspeed > 0){
-        return this.queryLeftX(query);
-    } else if(hspeed < 0) {
-        return this.queryRightX(query);
-    }
-}
 export default my2DBinarySearch;

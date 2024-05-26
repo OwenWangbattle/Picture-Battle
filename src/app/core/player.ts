@@ -74,11 +74,11 @@ class Player {
         };
         const xleftQuery = {
             topLeft: {
-                x: this.x,
+                x: nextX,
                 y: this.y + 1,
             },
             bottomRight: {
-                x: nextX,
+                x: this.x,
                 y: this.y + this.height - 1,
             },
         }
@@ -106,11 +106,11 @@ class Player {
         const ytopQuery = {
             topLeft: {
                 x: this.x + 1,
-                y: this.y,
+                y: nextY,
             },
             bottomRight: {
                 x: this.x + this.width - 1,
-                y: nextY,
+                y: this.y,
             },
         }
         const ybottomQuery = {
@@ -140,7 +140,7 @@ class Player {
         const xrightCollision = collisionDetector.queryLeftX(xrightQuery);
         const ytopCollision = collisionDetector.queryBottomY(ytopQuery);
         const ybottomCollision = collisionDetector.queryTopY(ybottomQuery);
-        const xyCollision =collisionDetector.queryXY(xyQuery, this.hSpeed, this.vSpeed);
+
         
 
         // to-do
@@ -149,39 +149,89 @@ class Player {
         // if (xCollision) {
         //     nextX = this.x;
         // }
-        if (xleftCollision !== null ) {
-            nextX = xleftCollision.x + 1;
+        if (this.hSpeed > 0){
+            if (xrightCollision !== null) {
+                nextX = xrightCollision.x - this.width - 1;
+            }
+        } else if (this.hSpeed < 0) {
+            if (xleftCollision !== null ) {
+                nextX = xleftCollision.x + 1;
+            }
         }
-        if (xrightCollision !== null) {
-            nextX = xrightCollision.x - this.width - 1;
+        if (this.vSpeed >= 0) {
+            if (ybottomCollision !== null) {
+                nextY =  ybottomCollision.y - this.height - 1;
+                this.vSpeed = 0;
+                this.jumpCounter = 0;
+            }
+        } else if(this.vSpeed < 0){
+            if (ytopCollision !== null) {
+                nextY = ytopCollision.y + 1;
+                this.vSpeed = 0;
+                this.jumpCounter = 0;
+            }
         }
-        if (ytopCollision !== null) {
-            nextY =  ytopCollision.y + 1;
-            this.vSpeed = 0;
-            this.jumpCounter = 0;
+        let xyCollision1 = null;
+        let xyCollision2 = null;
+        if(collisionDetector.queryExist(xyQuery) !== false){
+
+            if (this.hSpeed > 0 && this.vSpeed > 0){
+                xyCollision1 = collisionDetector.queryLeftX(xyQuery);
+                xyCollision2 = collisionDetector.queryTopY(xyQuery);
+                if (xyCollision1 !== null){
+                    nextX = xyCollision1.x - this.width - 1;
+                }
+                // if (xyCollision2 !== null){
+                //     nextY = xyCollision2.y - this.height - 1;
+                // }
+            } else if (this.hSpeed < 0 && this.vSpeed > 0){
+                 xyCollision1 = collisionDetector.queryRightX(xyQuery);
+                 xyCollision2 = collisionDetector.queryTopY(xyQuery);
+                if (xyCollision1 !== null){
+                    nextX = xyCollision1.x + 1;
+                }
+                // if (xyCollision2 !== null){
+                //     nextY = xyCollision2.y - this.height - 1;
+                // }
+    
+            } else if (this.hSpeed > 0 && this.vSpeed < 0){
+                 xyCollision1 = collisionDetector.queryLeftX(xyQuery);
+                 xyCollision2 = collisionDetector.queryBottomY(xyQuery);
+                if (xyCollision1 !== null){
+                    nextX = xyCollision1.x - this.width - 1;
+                }
+                // if (xyCollision2 !== null){
+                //     nextY = xyCollision2.y + 1;
+                // }
+            }  else if (this.hSpeed < 0 && this.vSpeed < 0){
+                 xyCollision1 = collisionDetector.queryRightX(xyQuery);
+                 xyCollision2 = collisionDetector.queryBottomY(xyQuery);
+                if (xyCollision1 !== null){
+                    nextX = xyCollision1.x + 1;
+                }
+                // if (xyCollision2 !== null){
+                //     nextY = xyCollision2.y + 1;
+                // }
+            }
         }
-        if (ybottomCollision !== null) {
-            nextY =  ybottomCollision.y - this.height - 1;
-            this.vSpeed = 0;
-            this.jumpCounter = 0;
-        }
-        if (xyCollision !== null && this.hSpeed > 0 && this.vSpeed > 0) {
-            nextX = xyCollision.x - this.width;
-            this.vSpeed = 0;
-            this.jumpCounter = 0;
-        } else if ( xyCollision !== null && this.hSpeed < 0 && this.vSpeed > 0) {
-            nextX = xyCollision.x;
-            this.vSpeed = 0;
-            this.jumpCounter = 0;
-        } else if ( xyCollision !== null && this.hSpeed > 0 && this.vSpeed < 0) {
-            nextX = xyCollision.x - this.width;
-            this.vSpeed = 0;
-            this.jumpCounter = 0;
-        } else if ( xyCollision !== null && this.hSpeed < 0 && this.vSpeed < 0) {
-            nextX = xyCollision.x;
-            this.vSpeed = 0;
-            this.jumpCounter = 0;
-        }
+
+        // console.log(this.hSpeed, this.vSpeed);
+        // console.log(xleftCollision, xrightCollision, ytopCollision, ybottomCollision);
+        // console.log(xyCollision1, xyCollision2);
+        // const xyCollision = collisionDetector.queryXY(xyQuery, this.hSpeed, this.vSpeed);
+        // if (xyCollision !== null && this.hSpeed > 0 && this.vSpeed > 0) {
+        //     nextX = xyCollision.x - this.width - 1;
+
+        // } else if ( xyCollision !== null && this.hSpeed < 0 && this.vSpeed > 0) {
+        //     nextX = xyCollision.x + 1;
+
+        // } else if ( xyCollision !== null && this.hSpeed > 0 && this.vSpeed < 0) {
+        //     nextX = xyCollision.x - this.width - 1;
+
+        // } else if ( xyCollision !== null && this.hSpeed < 0 && this.vSpeed < 0) {
+        //     nextX = xyCollision.x + 1;
+
+        // }
 
         // set next coordinates
         this.x = nextX;
