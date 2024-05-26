@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     fs.writeFileSync(imagePath, buffer);
 
     await new Promise((resolve, reject) => {
-        const pythonProcess = spawn("python3", [
+        const pythonProcess = spawn(`${process.env.PYTHON_CMD}`, [
             "./src/img_process/test.py",
             `./public/uploads/${image.name}`,
         ]);
