@@ -73,9 +73,10 @@ const start_game = async (
 
     // create keyboard mapper
     const keyMapper = new KeyMapper({
-        jumpKey: "ShiftLeft",
+        jumpKey: "Space",
         moveLeftKey: "ArrowLeft",
         moveRightKey: "ArrowRight",
+        flashKey: "KeyF",
     });
 
     // keyboard handler

@@ -98,18 +98,35 @@ class Player {
         };
 
         // detect collision
-        const xCollision = collisionDetector.queryExist(xOnlyQuery);
-        const yCollision = collisionDetector.queryExist(yOnlyQuery);
+        const xleftCollision = collisionDetector.queryRightX(xOnlyQuery);
+        const xrightCollision = collisionDetector.queryLeftX(xOnlyQuery);
+        const ytopCollision = collisionDetector.queryExist(yOnlyQuery);
+        const ybottomCollision = collisionDetector.queryExist(yOnlyQuery);
         const xyCollision = collisionDetector.queryExist(xyQuery);
 
         // to-do
         // we should not just revert to previous position when collision is detected
         // instead, it makes more sense to let the player move contact to the closest pixel
-        if (xCollision) {
+        // if (xCollision) {
+        //     nextX = this.x;
+        // }
+        if (xleftCollision !== null ) {
             nextX = this.x;
         }
-
-        if (yCollision || xyCollision) {
+        if (xrightCollision !== null) {
+            nextX = this.x;
+        }
+        if (ytopCollision) {
+            nextY =  this.y;
+            this.vSpeed = 0;
+            this.jumpCounter = 0;
+        }
+        if (ybottomCollision) {
+            nextY =  this.y;
+            this.vSpeed = 0;
+            this.jumpCounter = 0;
+        }
+        if ( xyCollision) {
             nextY = this.y;
             this.vSpeed = 0;
             this.jumpCounter = 0;

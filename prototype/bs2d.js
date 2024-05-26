@@ -197,6 +197,7 @@ my2DBinarySearch.prototype.queryExist = function (query) {
     if (st === -1) return false;
 
     for (let i = st; i < this.L1.length && this.L1[i].x <= xRight; ++i)
+        console.log(this.L1[i].x);
         if (this.L1[i].queryExist(yTop, yBottom)) return true;
 
     return false;
@@ -229,6 +230,7 @@ my2DBinarySearch.prototype.queryBottomY = function (query) {
     if (st === -1) return null;
 
     for (let i = st; i < this.L1.length && this.L1[i].x <= xRight; ++i) {
+
         const p = this.L1[i].queryMin(yTop, yBottom);
         if (!p) continue;
         if (retval === null) retval = p;
@@ -329,6 +331,7 @@ my2DBinarySearch.prototype.queryRightX = function (query) {
 
     if (st === -1) return null;
     for (let i = st; i < this.L1.length && this.L1[i].x >= xLeft; --i) {
+       
         const res = this.L1[i].queryOne(yTop, yBottom);
         if (res) return res;
     }
