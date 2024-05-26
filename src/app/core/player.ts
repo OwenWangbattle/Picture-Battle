@@ -72,19 +72,57 @@ class Player {
                 y: this.y + this.height,
             },
         };
-
+        const xleftQuery = {
+            topLeft: {
+                x: this.x,
+                y: this.y + 1,
+            },
+            bottomRight: {
+                x: nextX,
+                y: this.y + this.height - 1,
+            },
+        }
+        const xrightQuery = {
+            topLeft: {
+                x: this.x + this.width,
+                y: this.y + 1,
+            },
+            bottomRight: {
+                x: nextX + this.width,
+                y: this.y + this.height - 1,
+            },
+        }
         // move only y coordinate, remain x the same
         const yOnlyQuery = {
             topLeft: {
                 x: this.x,
-                y: nextY,
+                y: nextY + 1,
             },
             bottomRight: {
                 x: this.x + this.width,
-                y: nextY + this.height,
+                y: nextY + this.height - 1,
             },
         };
-
+        const ytopQuery = {
+            topLeft: {
+                x: this.x + 1,
+                y: this.y,
+            },
+            bottomRight: {
+                x: this.x + this.width - 1,
+                y: nextY,
+            },
+        }
+        const ybottomQuery = {
+            topLeft: {
+                x: this.x + 1,
+                y: this.y + this.height,
+            },
+            bottomRight: {
+                x: this.x + this.width - 1,
+                y: nextY + this.height,
+            },
+        }
         // move both x and y coordinates
         const xyQuery = {
             topLeft: {
@@ -98,19 +136,49 @@ class Player {
         };
 
         // detect collision
-        const xCollision = collisionDetector.queryExist(xOnlyQuery);
-        const yCollision = collisionDetector.queryExist(yOnlyQuery);
-        const xyCollision = collisionDetector.queryExist(xyQuery);
+        const xleftCollision = collisionDetector.queryRightX(xleftQuery);
+        const xrightCollision = collisionDetector.queryLeftX(xrightQuery);
+        const ytopCollision = collisionDetector.queryBottomY(ytopQuery);
+        const ybottomCollision = collisionDetector.queryTopY(ybottomQuery);
+        const xyCollision =collisionDetector.queryXY(xyQuery, this.hSpeed, this.vSpeed);
+        
 
         // to-do
         // we should not just revert to previous position when collision is detected
         // instead, it makes more sense to let the player move contact to the closest pixel
-        if (xCollision) {
-            nextX = this.x;
+        // if (xCollision) {
+        //     nextX = this.x;
+        // }
+        if (xleftCollision !== null ) {
+            nextX = xleftCollision.x + 1;
         }
-
-        if (yCollision || xyCollision) {
-            nextY = this.y;
+        if (xrightCollision !== null) {
+            nextX = xrightCollision.x - this.width - 1;
+        }
+        if (ytopCollision !== null) {
+            nextY =  ytopCollision.y + 1;
+            this.vSpeed = 0;
+            this.jumpCounter = 0;
+        }
+        if (ybottomCollision !== null) {
+            nextY =  ybottomCollision.y - this.height - 1;
+            this.vSpeed = 0;
+            this.jumpCounter = 0;
+        }
+        if (xyCollision !== null && this.hSpeed > 0 && this.vSpeed > 0) {
+            nextX = xyCollision.x - this.width;
+            this.vSpeed = 0;
+            this.jumpCounter = 0;
+        } else if ( xyCollision !== null && this.hSpeed < 0 && this.vSpeed > 0) {
+            nextX = xyCollision.x;
+            this.vSpeed = 0;
+            this.jumpCounter = 0;
+        } else if ( xyCollision !== null && this.hSpeed > 0 && this.vSpeed < 0) {
+            nextX = xyCollision.x - this.width;
+            this.vSpeed = 0;
+            this.jumpCounter = 0;
+        } else if ( xyCollision !== null && this.hSpeed < 0 && this.vSpeed < 0) {
+            nextX = xyCollision.x;
             this.vSpeed = 0;
             this.jumpCounter = 0;
         }

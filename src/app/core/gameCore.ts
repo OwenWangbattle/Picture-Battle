@@ -66,7 +66,7 @@ const start_game = async (
     if (currentGlobals) cleanup_game();
 
     // create player
-    const player = new Player(0, 0);
+    const player = new Player(20, 20);
 
     // set up 2d binary search
     const detector = new my2DBinarySearch(edges);
