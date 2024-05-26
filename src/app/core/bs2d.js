@@ -328,7 +328,7 @@ my2DBinarySearch.prototype.queryRightX = function (query) {
     }
 
     if (st === -1) return null;
-    for (let i = st; i < this.L1.length && this.L1[i].x >= xLeft; --i) {
+    for (let i = st; i >= 0 && this.L1[i].x >= xLeft; --i) {
         const res = this.L1[i].queryOne(yTop, yBottom);
         if (res) return res;
     }
