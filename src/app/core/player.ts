@@ -1,8 +1,19 @@
-class Player {
+import CollidableObject from "./CollidableObject";
+import CollisionHandler from "./CollisionHandler";
+import {
+    DamagableObject,
+    MeleeWeapon,
+    MeleeWeaponSlash,
+    Weapon,
+} from "./weapon";
+
+class Player extends CollidableObject {
     // ---------- player status ----------
     // player position
-    x: number;
-    y: number;
+    // x: number;
+    // y: number;
+
+    index: number;
 
     // player jump counter
     jumpCounter: number;
@@ -22,15 +33,26 @@ class Player {
 
     onGround: boolean;
 
+    // which direction does player face
+    static FACE = {
+        LEFT: Symbol("left"),
+        RIGHT: Symbol("right"),
+    };
+    face: Symbol;
+
     coyote_time: {
         start: boolean;
         timer: Date | null;
     };
 
+    weapon: Weapon | null;
+    health: number;
+    invincible: boolean;
+
     // ---------- player static attributes ----------
     // player collision box
-    height: number = 21;
-    width: number = 11;
+    // player_height: number = 21;
+    // player_width: number = 11;
 
     // player jump release multiplier
     cancelFactor: number = 0.4;
@@ -47,9 +69,12 @@ class Player {
     // player double jump initial speed
     dJumpSpeed: number = 7;
 
-    constructor(x: number, y: number) {
-        this.x = x;
-        this.y = y;
+    coyote_time_limit: number = 0.08; //seconds
+
+    constructor(x: number, y: number, index: number, health = 100) {
+        super(x, y, 21, 11, 0);
+
+        this.index = index;
 
         this.jumpCounter = 0;
 
@@ -64,14 +89,23 @@ class Player {
         };
 
         this.onGround = true;
+        this.face = Player.FACE.LEFT;
 
         this.coyote_time = {
             start: false,
             timer: null,
         };
+
+        this.weapon = null;
+        this.health = health;
+        this.invincible = false;
     }
 
-    CollisionHandler(collisionDetector: any) {
+    bind_to_weapon(weapon: Weapon) {
+        this.weapon = weapon;
+    }
+
+    CollisionHandler(collisionDetector: CollisionHandler) {
         let nextX = Math.round(this.x + this.hSpeed);
         let nextY = Math.round(this.y + this.vSpeed);
 
@@ -85,7 +119,8 @@ class Player {
                 y: nextY + this.height,
             },
         };
-        const startxyCollision = collisionDetector.queryExist(startxyQuery);
+        const startxyCollision =
+            collisionDetector.backgroundCollision.queryExist(startxyQuery);
 
         if (startxyCollision !== false) {
             if (this.hSpeed > 0) {
@@ -100,7 +135,9 @@ class Player {
                     },
                 };
                 const xrightCollision =
-                    collisionDetector.queryLeftX(xrightQuery);
+                    collisionDetector.backgroundCollision.queryLeftX(
+                        xrightQuery
+                    );
                 if (xrightCollision !== null) {
                     nextX = xrightCollision.x - this.width - 1;
                     this.hSpeed = 0;
@@ -117,7 +154,9 @@ class Player {
                     },
                 };
                 const xleftCollision =
-                    collisionDetector.queryRightX(xleftQuery);
+                    collisionDetector.backgroundCollision.queryRightX(
+                        xleftQuery
+                    );
                 if (xleftCollision !== null) {
                     nextX = xleftCollision.x + 1;
                     this.hSpeed = 0;
@@ -135,7 +174,9 @@ class Player {
                     },
                 };
                 const ybottomCollision =
-                    collisionDetector.queryBottomY(ybottomQuery);
+                    collisionDetector.backgroundCollision.queryBottomY(
+                        ybottomQuery
+                    );
                 if (ybottomCollision !== null) {
                     nextY = ybottomCollision.y - this.height - 1;
                     this.vSpeed = 0;
@@ -153,7 +194,8 @@ class Player {
                         y: this.y,
                     },
                 };
-                const ytopCollision = collisionDetector.queryTopY(ytopQuery);
+                const ytopCollision =
+                    collisionDetector.backgroundCollision.queryTopY(ytopQuery);
                 if (ytopCollision !== null) {
                     nextY = ytopCollision.y + 1;
                     this.vSpeed = 0;
@@ -165,7 +207,37 @@ class Player {
         this.y = nextY;
     }
 
-    next_frame(collisionDetector: any, ctx: CanvasRenderingContext2D) {
+    WeaponCollision(collisionDetector: CollisionHandler) {
+        if (this.invincible) return;
+        const items = collisionDetector.queryCollisionItems(this.index, [
+            "attack",
+        ]);
+        for (let i = 0; i < items.length; ++i) {
+            const item = items[i].object as unknown as DamagableObject;
+            // melee weapon should not be able to damage player itself
+            if (item instanceof MeleeWeaponSlash)
+                if (
+                    (item as MeleeWeaponSlash).belong.player.index ===
+                    this.index
+                )
+                    continue;
+
+            // but remote weapon could
+            this.health -= item.damage;
+
+            console.log(`dealt ${item.damage} damage to ${this.index}`);
+
+            this.invincible = true;
+            setTimeout(() => {
+                this.invincible = false;
+            }, 1000);
+        }
+    }
+
+    next_frame(
+        collisionDetector: CollisionHandler,
+        ctx: CanvasRenderingContext2D
+    ) {
         // consume pending actions
         this.hSpeed = 0;
         if (this.pendingAction.left) this.hSpeed = -this.moveSpeed;
@@ -198,13 +270,18 @@ class Player {
         }
         this.pendingAction.release = false;
 
+        // handle player facing direction
+        if (this.hSpeed > 0) this.face = Player.FACE.RIGHT;
+        else if (this.hSpeed < 0) this.face = Player.FACE.LEFT;
+
         // erase previous position
         this.erase(ctx);
 
         // calculate player's next position
         this.CollisionHandler(collisionDetector);
+        this.WeaponCollision(collisionDetector);
 
-        this.onGround = collisionDetector.queryExist({
+        this.onGround = collisionDetector.backgroundCollision.queryExist({
             topLeft: {
                 x: this.x,
                 y: this.y + this.height,
@@ -215,6 +292,7 @@ class Player {
             },
         });
 
+        // handle coyote time
         if (!this.onGround) {
             if (this.coyote_time.start) {
                 if (!this.coyote_time.timer)
@@ -224,7 +302,7 @@ class Player {
                     (new Date().getTime() - this.coyote_time.timer.getTime()) /
                     1000;
 
-                if (seconds > 0.08) {
+                if (seconds > this.coyote_time_limit) {
                     this.jumpCounter = Math.max(1, this.jumpCounter);
                     this.clearCoyoteTimer();
                 }
@@ -233,6 +311,10 @@ class Player {
 
         // render new position
         this.render(ctx);
+
+        if (this.weapon) {
+            this.weapon.render(ctx);
+        }
     }
 
     // player actions
@@ -266,7 +348,7 @@ class Player {
     render(ctx: CanvasRenderingContext2D) {
         const prev_color = ctx.fillStyle;
 
-        ctx.fillStyle = "red";
+        ctx.fillStyle = this.health > 0 ? "green" : "red";
         ctx.fillRect(this.x, this.y, this.width + 1, this.height + 1);
         ctx.fillStyle = prev_color;
     }
@@ -288,6 +370,11 @@ class Player {
     clearCoyoteTimer() {
         this.coyote_time.start = false;
         this.coyote_time.timer = null;
+    }
+
+    attack() {
+        if (!this.weapon) return;
+        this.weapon.attack();
     }
 }
 

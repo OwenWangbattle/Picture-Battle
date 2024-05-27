@@ -1,12 +1,14 @@
 import Player from "./player";
-import my2DBinarySearch from "./bs2d";
 import KeyMapper from "./keyMapper";
+import CollisionHandler from "./CollisionHandler";
+import my2DBinarySearch from "./bs2d";
+import { MeleeWeapon, RemoteWeapon } from "./weapon";
 
 const fps = 50;
 
 class gameGlobals {
     player: Player;
-    detector: my2DBinarySearch | null;
+    collisionHandler: CollisionHandler | null;
     intervalID: NodeJS.Timeout | null;
     ctx: CanvasRenderingContext2D;
 
@@ -15,14 +17,14 @@ class gameGlobals {
 
     constructor(
         player: Player,
-        detector: my2DBinarySearch | null,
+        collisionHandler: CollisionHandler | null,
         intervalID: NodeJS.Timeout | null,
         handleKeyDown: ((this: Document, ev: KeyboardEvent) => any) | null,
         handleKeyUp: ((this: Document, ev: KeyboardEvent) => any) | null,
         ctx: CanvasRenderingContext2D
     ) {
         this.player = player;
-        this.detector = detector;
+        this.collisionHandler = collisionHandler;
         this.intervalID = intervalID;
         this.handleKeyDown = handleKeyDown;
         this.handleKeyUp = handleKeyUp;
@@ -39,11 +41,13 @@ class gameGlobals {
         this.intervalID = null;
         this.handleKeyDown = null;
         this.handleKeyUp = null;
-        this.detector = null;
+        this.collisionHandler = null;
     }
 }
 
 let currentGlobals: gameGlobals | null;
+
+let deadplayer: Player;
 
 // game logics per frame
 const gameFrame = () => {
@@ -51,11 +55,17 @@ const gameFrame = () => {
         console.error("game globals does not exist!");
         return;
     }
+    if (!currentGlobals.collisionHandler) {
+        console.error("game collision Handler does not exist!");
+        return;
+    }
 
     currentGlobals.player.next_frame(
-        currentGlobals.detector,
+        currentGlobals.collisionHandler,
         currentGlobals.ctx
     );
+
+    deadplayer.next_frame(currentGlobals.collisionHandler, currentGlobals.ctx);
 };
 
 const start_game = async (
@@ -65,17 +75,35 @@ const start_game = async (
     // clean up if there are left overs
     if (currentGlobals) cleanup_game();
 
-    // create player
-    const player = new Player(20, 20);
-
     // set up 2d binary search
-    const detector = new my2DBinarySearch(edges);
+    const backgroundCollision = new my2DBinarySearch(edges);
+    const collisionHandler = new CollisionHandler(backgroundCollision);
+
+    // create player
+    const player = new Player(20, 20, 0);
+    collisionHandler.addCollisionObject("player", player);
+
+    // const weapon = new MeleeWeapon("test", 5, 21, 10, collisionHandler, player);
+
+    const weapon = new RemoteWeapon(
+        "test",
+        5,
+        10,
+        10,
+        collisionHandler,
+        player
+    );
+    player.bind_to_weapon(weapon);
+
+    deadplayer = new Player(100, 20, 1);
+    collisionHandler.addCollisionObject("player", deadplayer);
 
     // create keyboard mapper
     const keyMapper = new KeyMapper({
         jumpKey: "ShiftLeft",
         moveLeftKey: "ArrowLeft",
         moveRightKey: "ArrowRight",
+        attackKey: "Space",
     });
 
     // keyboard handler
@@ -86,6 +114,9 @@ const start_game = async (
             player.moveRight();
         } else if (e.code === keyMapper.jumpKey) {
             player.jump();
+        } else if (e.code === keyMapper.attackKey) {
+            console.log("attack");
+            player.attack();
         }
     };
 
@@ -105,7 +136,7 @@ const start_game = async (
     // create game globals
     currentGlobals = new gameGlobals(
         player,
-        detector,
+        collisionHandler,
         null,
         handleKeyDown,
         handleKeyUp,
