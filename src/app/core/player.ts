@@ -58,8 +58,8 @@ class Player {
     }
 
     CollisionHandler(collisionDetector: any) {
-        let nextX = this.x + this.hSpeed;
-        let nextY = this.y + this.vSpeed;
+        let nextX = Math.round(this.x + this.hSpeed);
+        let nextY = Math.round(this.y + this.vSpeed);
 
         // move only x coordinate, remain y the same
         const xOnlyQuery = {
@@ -72,57 +72,20 @@ class Player {
                 y: this.y + this.height,
             },
         };
-        const xleftQuery = {
-            topLeft: {
-                x: nextX,
-                y: this.y + 1,
-            },
-            bottomRight: {
-                x: this.x,
-                y: this.y + this.height - 1,
-            },
-        }
-        const xrightQuery = {
-            topLeft: {
-                x: this.x + this.width,
-                y: this.y + 1,
-            },
-            bottomRight: {
-                x: nextX + this.width,
-                y: this.y + this.height - 1,
-            },
-        }
+
+
         // move only y coordinate, remain x the same
         const yOnlyQuery = {
             topLeft: {
                 x: this.x,
-                y: nextY + 1,
-            },
-            bottomRight: {
-                x: this.x + this.width,
-                y: nextY + this.height - 1,
-            },
-        };
-        const ytopQuery = {
-            topLeft: {
-                x: this.x + 1,
                 y: nextY,
             },
             bottomRight: {
-                x: this.x + this.width - 1,
-                y: this.y,
-            },
-        }
-        const ybottomQuery = {
-            topLeft: {
-                x: this.x + 1,
-                y: this.y + this.height,
-            },
-            bottomRight: {
-                x: this.x + this.width - 1,
+                x: this.x + this.width,
                 y: nextY + this.height,
             },
-        }
+        };
+
         // move both x and y coordinates
         const xyQuery = {
             topLeft: {
@@ -134,105 +97,125 @@ class Player {
                 y: nextY + this.height,
             },
         };
-
         // detect collision
-        const xleftCollision = collisionDetector.queryRightX(xleftQuery);
-        const xrightCollision = collisionDetector.queryLeftX(xrightQuery);
-        const ytopCollision = collisionDetector.queryBottomY(ytopQuery);
-        const ybottomCollision = collisionDetector.queryTopY(ybottomQuery);
-
-        
-
+        const xyCollision = collisionDetector.queryExist(xyQuery);
+        let xtemp = false;
+        let ytemp = false;
+        let startvSpeed = this.vSpeed;
+        let starthSpeed = this.hSpeed;
+        let startnextX = nextX;
+        let startnextY = nextY;
         // to-do
         // we should not just revert to previous position when collision is detected
         // instead, it makes more sense to let the player move contact to the closest pixel
-        // if (xCollision) {
-        //     nextX = this.x;
-        // }
-        if (this.hSpeed > 0){
-            if (xrightCollision !== null) {
+        if(this.hSpeed > 0){
+            const xrightQuery = {
+                topLeft: {
+                    x: this.x + this.width,
+                    y: this.y,
+                },
+                bottomRight: {
+                    x: nextX + this.width,
+                    y: this.y + this.height,
+                },
+            };
+            const xrightCollision = collisionDetector.queryLeftX(xrightQuery);
+            if(xrightCollision !== null){
                 nextX = xrightCollision.x - this.width - 1;
+                this.hSpeed = 0;
+                xtemp = true;
+                console.log("right collision");
             }
-        } else if (this.hSpeed < 0) {
-            if (xleftCollision !== null ) {
+        } else if(this.hSpeed < 0){
+            const xleftQuery = {
+                topLeft: {
+                    x: nextX,
+                    y: this.y,
+                },
+                bottomRight: {
+                    x: this.x,
+                    y: this.y + this.height,
+                },
+            };
+            const xleftCollision = collisionDetector.queryRightX(xleftQuery);
+            if(xleftCollision !== null){
                 nextX = xleftCollision.x + 1;
+                this.hSpeed = 0;
+                xtemp = true;
+                console.log("left collision");
             }
         }
-        if (this.vSpeed >= 0) {
-            if (ybottomCollision !== null) {
-                nextY =  ybottomCollision.y - this.height - 1;
+        if (this.vSpeed > 0){
+            const ybottomQuery = {
+                topLeft: {
+                    x: this.x,
+                    y: this.y + this.height,
+                },
+                bottomRight: {
+                    x: this.x + this.width,
+                    y: nextY + this.height,
+                },
+            };
+            const ybottomCollision = collisionDetector.queryTopY(ybottomQuery);
+            if(ybottomCollision !== null){
+                nextY = ybottomCollision.y - this.height - 1;
                 this.vSpeed = 0;
                 this.jumpCounter = 0;
+                ytemp = true;
+                console.log("bottom collision");
             }
         } else if(this.vSpeed < 0){
-            if (ytopCollision !== null) {
+            const ytopQuery = {
+                topLeft: {
+                    x: this.x,
+                    y: nextY,
+                },
+                bottomRight: {
+                    x: this.x + this.width,
+                    y: this.y,
+                },
+            };
+            const ytopCollision = collisionDetector.queryBottomY(ytopQuery);
+            if(ytopCollision !== null){
                 nextY = ytopCollision.y + 1;
                 this.vSpeed = 0;
-                this.jumpCounter = 0;
+                ytemp = true;
+                console.log("top collision");
             }
         }
         let xyCollision1 = null;
         let xyCollision2 = null;
-        if(collisionDetector.queryExist(xyQuery) !== false){
-
-            if (this.hSpeed > 0 && this.vSpeed > 0){
+        if(collisionDetector.queryExist(xyQuery) !== false && xtemp && ytemp){
+            console.log("ashdfhsdfhsuhfasufhuiafuasd")
+            console.log(this.hSpeed, this.vSpeed);
+            console.log(this.x, this.y);
+            if(this.hSpeed > 0){
                 xyCollision1 = collisionDetector.queryLeftX(xyQuery);
-                xyCollision2 = collisionDetector.queryTopY(xyQuery);
-                if (xyCollision1 !== null){
+                if(xyCollision1 !== null){
                     nextX = xyCollision1.x - this.width - 1;
+                    this.hSpeed = 0;
                 }
-                // if (xyCollision2 !== null){
-                //     nextY = xyCollision2.y - this.height - 1;
-                // }
-            } else if (this.hSpeed < 0 && this.vSpeed > 0){
-                 xyCollision1 = collisionDetector.queryRightX(xyQuery);
-                 xyCollision2 = collisionDetector.queryTopY(xyQuery);
-                if (xyCollision1 !== null){
+            } else if(this.hSpeed < 0){
+                xyCollision1 = collisionDetector.queryRightX(xyQuery);
+                if(xyCollision1 !== null){
                     nextX = xyCollision1.x + 1;
+                    this.hSpeed = 0;
                 }
-                // if (xyCollision2 !== null){
-                //     nextY = xyCollision2.y - this.height - 1;
-                // }
-    
-            } else if (this.hSpeed > 0 && this.vSpeed < 0){
-                 xyCollision1 = collisionDetector.queryLeftX(xyQuery);
-                 xyCollision2 = collisionDetector.queryBottomY(xyQuery);
-                if (xyCollision1 !== null){
-                    nextX = xyCollision1.x - this.width - 1;
-                }
-                // if (xyCollision2 !== null){
-                //     nextY = xyCollision2.y + 1;
-                // }
-            }  else if (this.hSpeed < 0 && this.vSpeed < 0){
-                 xyCollision1 = collisionDetector.queryRightX(xyQuery);
-                 xyCollision2 = collisionDetector.queryBottomY(xyQuery);
-                if (xyCollision1 !== null){
-                    nextX = xyCollision1.x + 1;
-                }
-                // if (xyCollision2 !== null){
-                //     nextY = xyCollision2.y + 1;
-                // }
             }
+            if(this.vSpeed > 0){
+                xyCollision2 = collisionDetector.queryTopY(xyQuery);
+                if (xyCollision2 !== null){
+                    nextY = xyCollision2.y - this.height - 1;
+                    this.vSpeed = 0;
+                }
+            } else if(this.vSpeed < 0){
+                xyCollision2 = collisionDetector.queryBottomY(xyQuery);
+                if (xyCollision2 !== null){
+                    nextY = xyCollision2.y + 1;
+                    this.vSpeed = 0;
+                }
+            }    
         }
-
-        // console.log(this.hSpeed, this.vSpeed);
-        // console.log(xleftCollision, xrightCollision, ytopCollision, ybottomCollision);
-        // console.log(xyCollision1, xyCollision2);
-        // const xyCollision = collisionDetector.queryXY(xyQuery, this.hSpeed, this.vSpeed);
-        // if (xyCollision !== null && this.hSpeed > 0 && this.vSpeed > 0) {
-        //     nextX = xyCollision.x - this.width - 1;
-
-        // } else if ( xyCollision !== null && this.hSpeed < 0 && this.vSpeed > 0) {
-        //     nextX = xyCollision.x + 1;
-
-        // } else if ( xyCollision !== null && this.hSpeed > 0 && this.vSpeed < 0) {
-        //     nextX = xyCollision.x - this.width - 1;
-
-        // } else if ( xyCollision !== null && this.hSpeed < 0 && this.vSpeed < 0) {
-        //     nextX = xyCollision.x + 1;
-
-        // }
-
         // set next coordinates
         this.x = nextX;
         this.y = nextY;
@@ -311,7 +294,7 @@ class Player {
         const prev_color = ctx.fillStyle;
 
         ctx.fillStyle = "red";
-        ctx.fillRect(this.x, this.y, this.width, this.height);
+        ctx.fillRect(this.x, this.y, this.width - 1, this.height - 1);
         ctx.fillStyle = prev_color;
     }
 
@@ -319,8 +302,8 @@ class Player {
         ctx.clearRect(
             Math.floor(this.x),
             Math.floor(this.y),
-            this.width,
-            this.height + 1
+            this.width - 1,
+            this.height - 1
         );
     }
 }
