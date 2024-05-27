@@ -1,3 +1,5 @@
+import { start } from "repl";
+
 class Player {
     // ---------- player status ----------
     // player position
@@ -87,6 +89,103 @@ class Player {
         };
 
         // move both x and y coordinates
+        // detect collision
+        const startxyQuery = {
+            topLeft:{
+                x: nextX,
+                y: nextY,
+            },
+            bottomRight:{
+                x: nextX + this.width,
+                y: nextY + this.height,
+            },
+        };
+        let xtemp = false;
+        let ytemp = false;
+        let startvSpeed = this.vSpeed;
+        let starthSpeed = this.hSpeed;
+        let startnextX = nextX;
+        let startnextY = nextY;
+        const startxyCollision = collisionDetector.queryExist(startxyQuery);
+        // to-do
+        // we should not just revert to previous position when collision is detected
+        // instead, it makes more sense to let the player move contact to the closest pixel
+        if (startxyCollision !== false){
+            if(this.hSpeed > 0){
+                const xrightQuery = {
+                    topLeft: {
+                        x: this.x + this.width,
+                        y: this.y,
+                    },
+                    bottomRight: {
+                        x: nextX + this.width,
+                        y: this.y + this.height,
+                    },
+                };
+                const xrightCollision = collisionDetector.queryLeftX(xrightQuery);
+                if(xrightCollision !== null){
+                    nextX = xrightCollision.x - this.width - 1;
+                    this.hSpeed = 0;
+                    xtemp = true;
+                }
+            } else if(this.hSpeed < 0){
+                const xleftQuery = {
+                    topLeft: {
+                        x: nextX,
+                        y: this.y,
+                    },
+                    bottomRight: {
+                        x: this.x,
+                        y: this.y + this.height,
+                    },
+                };
+                const xleftCollision = collisionDetector.queryRightX(xleftQuery);
+                if(xleftCollision !== null){
+                    nextX = xleftCollision.x + 1;
+                    this.hSpeed = 0;
+                    xtemp = true;
+                }
+            }
+            if (this.vSpeed > 0){
+                const ybottomQuery = {
+                    topLeft: {
+                        x: this.x,
+                        y: this.y + this.height,
+                    },
+                    bottomRight: {
+                        x: this.x + this.width,
+                        y: nextY + this.height,
+                    },
+                };
+                const ybottomCollision = collisionDetector.queryBottomY(ybottomQuery);
+                if(ybottomCollision !== null){
+                    nextY = ybottomCollision.y - this.height - 1;
+                    this.vSpeed = 0;
+                    this.jumpCounter = 0;
+                    ytemp = true;
+                }
+            } else if(this.vSpeed < 0){
+                const ytopQuery = {
+                    topLeft: {
+                        x: this.x,
+                        y: nextY,
+                    },
+                    bottomRight: {
+                        x: this.x + this.width,
+                        y: this.y,
+                    },
+                };
+                const ytopCollision = collisionDetector.queryTopY(ytopQuery);
+                if(ytopCollision !== null){
+                    nextY = ytopCollision.y + 1;
+                    this.vSpeed = 0;
+                    ytemp = true;
+                }
+            }
+
+        }
+        let xyCollision1 = null;
+        let xyCollision2 = null;
         const xyQuery = {
             topLeft: {
                 x: nextX,
@@ -97,118 +196,29 @@ class Player {
                 y: nextY + this.height,
             },
         };
-        // detect collision
         const xyCollision = collisionDetector.queryExist(xyQuery);
-        let xtemp = false;
-        let ytemp = false;
-        let startvSpeed = this.vSpeed;
-        let starthSpeed = this.hSpeed;
-        let startnextX = nextX;
-        let startnextY = nextY;
-        // to-do
-        // we should not just revert to previous position when collision is detected
-        // instead, it makes more sense to let the player move contact to the closest pixel
-        if(this.hSpeed > 0){
-            const xrightQuery = {
-                topLeft: {
-                    x: this.x + this.width,
-                    y: this.y,
-                },
-                bottomRight: {
-                    x: nextX + this.width,
-                    y: this.y + this.height,
-                },
-            };
-            const xrightCollision = collisionDetector.queryLeftX(xrightQuery);
-            if(xrightCollision !== null){
-                nextX = xrightCollision.x - this.width - 1;
-                this.hSpeed = 0;
-                xtemp = true;
-                console.log("right collision");
-            }
-        } else if(this.hSpeed < 0){
-            const xleftQuery = {
-                topLeft: {
-                    x: nextX,
-                    y: this.y,
-                },
-                bottomRight: {
-                    x: this.x,
-                    y: this.y + this.height,
-                },
-            };
-            const xleftCollision = collisionDetector.queryRightX(xleftQuery);
-            if(xleftCollision !== null){
-                nextX = xleftCollision.x + 1;
-                this.hSpeed = 0;
-                xtemp = true;
-                console.log("left collision");
-            }
-        }
-        if (this.vSpeed > 0){
-            const ybottomQuery = {
-                topLeft: {
-                    x: this.x,
-                    y: this.y + this.height,
-                },
-                bottomRight: {
-                    x: this.x + this.width,
-                    y: nextY + this.height,
-                },
-            };
-            const ybottomCollision = collisionDetector.queryTopY(ybottomQuery);
-            if(ybottomCollision !== null){
-                nextY = ybottomCollision.y - this.height - 1;
-                this.vSpeed = 0;
-                this.jumpCounter = 0;
-                ytemp = true;
-                console.log("bottom collision");
-            }
-        } else if(this.vSpeed < 0){
-            const ytopQuery = {
-                topLeft: {
-                    x: this.x,
-                    y: nextY,
-                },
-                bottomRight: {
-                    x: this.x + this.width,
-                    y: this.y,
-                },
-            };
-            const ytopCollision = collisionDetector.queryBottomY(ytopQuery);
-            if(ytopCollision !== null){
-                nextY = ytopCollision.y + 1;
-                this.vSpeed = 0;
-                ytemp = true;
-                console.log("top collision");
-            }
-        }
-        let xyCollision1 = null;
-        let xyCollision2 = null;
-        if(collisionDetector.queryExist(xyQuery) !== false && xtemp && ytemp){
+        if(xyCollision !== false){
             console.log("ashdfhsdfhsuhfasufhuiafuasd")
-            console.log(this.hSpeed, this.vSpeed);
-            console.log(this.x, this.y);
-            if(this.hSpeed > 0){
+            if(starthSpeed > 0){
                 xyCollision1 = collisionDetector.queryLeftX(xyQuery);
                 if(xyCollision1 !== null){
                     nextX = xyCollision1.x - this.width - 1;
                     this.hSpeed = 0;
                 }
-            } else if(this.hSpeed < 0){
+            } else if(starthSpeed < 0){
                 xyCollision1 = collisionDetector.queryRightX(xyQuery);
                 if(xyCollision1 !== null){
                     nextX = xyCollision1.x + 1;
                     this.hSpeed = 0;
                 }
             }
-            if(this.vSpeed > 0){
+            if(startvSpeed > 0){
                 xyCollision2 = collisionDetector.queryTopY(xyQuery);
                 if (xyCollision2 !== null){
                     nextY = xyCollision2.y - this.height - 1;
                     this.vSpeed = 0;
                 }
-            } else if(this.vSpeed < 0){
+            } else if(startvSpeed < 0){
                 xyCollision2 = collisionDetector.queryBottomY(xyQuery);
                 if (xyCollision2 !== null){
                     nextY = xyCollision2.y + 1;
@@ -219,6 +229,18 @@ class Player {
         // set next coordinates
         this.x = nextX;
         this.y = nextY;
+        const querytest = {
+            topLeft: {
+                x: this.x,
+                y: this.y,
+            },
+            bottomRight: {
+                x: this.x + this.width,
+                y: this.y + this.height,
+            },
+        };
+        const collisiontest = collisionDetector.queryExist(querytest);
+        console.log(collisiontest);
     }
 
     next_frame(collisionDetector: any, ctx: CanvasRenderingContext2D) {
@@ -294,7 +316,7 @@ class Player {
         const prev_color = ctx.fillStyle;
 
         ctx.fillStyle = "red";
-        ctx.fillRect(this.x, this.y, this.width - 1, this.height - 1);
+        ctx.fillRect(this.x, this.y, this.width + 1, this.height + 1);
         ctx.fillStyle = prev_color;
     }
 
@@ -302,8 +324,8 @@ class Player {
         ctx.clearRect(
             Math.floor(this.x),
             Math.floor(this.y),
-            this.width - 1,
-            this.height - 1
+            this.width + 1,
+            this.height + 1
         );
     }
 }

@@ -229,7 +229,7 @@ my2DBinarySearch.prototype.queryBottomY = function (query) {
     if (st === -1) return null;
 
     for (let i = st; i < this.L1.length && this.L1[i].x <= xRight; ++i) {
-        const p = this.L1[i].queryMax(yTop, yBottom);
+        const p = this.L1[i].queryMin(yTop, yBottom);
         if (!p) continue;
         if (retval === null) retval = p;
         else if (retval.y > p.y) retval = p;
@@ -265,7 +265,7 @@ my2DBinarySearch.prototype.queryTopY = function (query) {
     if (st === -1) return null;
 
     for (let i = st; i < this.L1.length && this.L1[i].x <= xRight; ++i) {
-        const p = this.L1[i].queryMin(yTop, yBottom);
+        const p = this.L1[i].queryMax(yTop, yBottom);
         if (!p) continue;
         if (retval === null) retval = p;
         else if (retval.y < p.y) retval = p;
