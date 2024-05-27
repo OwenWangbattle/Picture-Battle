@@ -149,11 +149,11 @@ class Player {
             if (this.vSpeed > 0){
                 const ybottomQuery = {
                     topLeft: {
-                        x: this.x,
+                        x: nextX,
                         y: this.y + this.height,
                     },
                     bottomRight: {
-                        x: this.x + this.width,
+                        x: nextX + this.width,
                         y: nextY + this.height,
                     },
                 };
@@ -167,11 +167,11 @@ class Player {
             } else if(this.vSpeed < 0){
                 const ytopQuery = {
                     topLeft: {
-                        x: this.x,
+                        x: nextX,
                         y: nextY,
                     },
                     bottomRight: {
-                        x: this.x + this.width,
+                        x: nextX + this.width,
                         y: this.y,
                     },
                 };
