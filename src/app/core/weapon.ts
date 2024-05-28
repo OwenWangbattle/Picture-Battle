@@ -1,5 +1,6 @@
 import CollidableObject from "./CollidableObject";
 import CollisionHandler from "./CollisionHandler";
+import { createRenderingObject } from "./gameCore";
 import Player from "./player";
 
 class Weapon {
@@ -82,12 +83,14 @@ class MeleeWeapon extends Weapon {
     slashWidth: number;
     slashHeight: number;
     damage: number;
+    zIndex: number;
 
     constructor(
         name: string,
         slashWidth: number,
         slashHeight: number,
         damage: number,
+        zIndex: number,
         collisionHandler: CollisionHandler,
         player: Player
     ) {
@@ -96,6 +99,7 @@ class MeleeWeapon extends Weapon {
         this.slashWidth = slashWidth;
         this.slashHeight = slashHeight;
         this.damage = damage;
+        this.zIndex = zIndex;
     }
 
     attack() {
@@ -146,6 +150,8 @@ class Bullet extends DamagableObject {
     collisionHandler: CollisionHandler;
     index: number;
 
+    zIndex: number;
+
     destoryed: boolean;
 
     constructor(
@@ -157,7 +163,8 @@ class Bullet extends DamagableObject {
         damage: number,
         speed: number,
         direction: number,
-        collisionHandler: CollisionHandler
+        collisionHandler: CollisionHandler,
+        zIndex: number
     ) {
         super(x, y, height, width, angle, damage);
         this.speed = speed;
@@ -166,6 +173,7 @@ class Bullet extends DamagableObject {
 
         this.index = collisionHandler.addCollisionObject("attack", this);
         this.destoryed = false;
+        this.zIndex = zIndex;
     }
 
     next_frame(ctx: CanvasRenderingContext2D) {
@@ -195,6 +203,9 @@ class Bullet extends DamagableObject {
     }
 
     render(ctx: CanvasRenderingContext2D) {
+        this.next_frame(ctx);
+        if (this.destoryed) return;
+
         const prev_color = ctx.fillStyle;
 
         ctx.fillStyle = "orange";
@@ -209,7 +220,6 @@ class Bullet extends DamagableObject {
 }
 
 class RemoteWeapon extends Weapon {
-    bullets: Bullet[];
     bulletWidth: number;
     bulletHeight: number;
     damage: number;
@@ -223,7 +233,6 @@ class RemoteWeapon extends Weapon {
         player: Player
     ) {
         super(name, collisionHandler, player);
-        this.bullets = [];
         this.bulletHeight = bulletHeight;
         this.bulletWidth = bulletWidth;
         this.damage = damage;
@@ -233,18 +242,18 @@ class RemoteWeapon extends Weapon {
         if (this.status !== Weapon.STATUS.FREE) return;
         this.status = Weapon.STATUS.ATTACK;
 
-        this.bullets.push(
-            new Bullet(
-                this.player.x + this.player.width + 1,
-                this.player.y,
-                this.bulletHeight,
-                this.bulletWidth,
-                0,
-                this.damage,
-                10,
-                0,
-                this.collisionHandler
-            )
+        createRenderingObject(
+            Bullet,
+            this.player.x + this.player.width + 1,
+            this.player.y,
+            this.bulletHeight,
+            this.bulletWidth,
+            0,
+            this.damage,
+            10,
+            0,
+            this.collisionHandler,
+            1
         );
 
         setTimeout(() => {
@@ -253,19 +262,18 @@ class RemoteWeapon extends Weapon {
     }
 
     update(ctx: CanvasRenderingContext2D) {
-        const updated: Bullet[] = [];
-        for (const bullet of this.bullets) {
-            bullet.next_frame(ctx);
-            if (bullet.destoryed) continue;
-            updated.push(bullet);
-        }
-        this.bullets = updated;
+        // const updated: Bullet[] = [];
+        // for (const bullet of this.bullets) {
+        //     bullet.next_frame(ctx);
+        //     if (bullet.destoryed) continue;
+        //     updated.push(bullet);
+        // }
+        // this.bullets = updated;
     }
 
     render(ctx: CanvasRenderingContext2D) {
-        this.update(ctx);
-
-        for (const bullet of this.bullets) bullet.render(ctx);
+        // this.update(ctx);
+        // for (const bullet of this.bullets) bullet.render(ctx);
     }
 }
 

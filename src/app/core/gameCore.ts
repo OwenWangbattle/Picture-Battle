@@ -3,6 +3,7 @@ import KeyMapper from "./keyMapper";
 import CollisionHandler from "./CollisionHandler";
 import my2DBinarySearch from "./bs2d";
 import { MeleeWeapon, RemoteWeapon } from "./weapon";
+import Renderer from "./renderer";
 
 const fps = 50;
 
@@ -11,6 +12,7 @@ class gameGlobals {
     collisionHandler: CollisionHandler | null;
     intervalID: NodeJS.Timeout | null;
     ctx: CanvasRenderingContext2D;
+    renderer: Renderer;
 
     handleKeyDown: ((this: Document, ev: KeyboardEvent) => any) | null;
     handleKeyUp: ((this: Document, ev: KeyboardEvent) => any) | null;
@@ -21,7 +23,8 @@ class gameGlobals {
         intervalID: NodeJS.Timeout | null,
         handleKeyDown: ((this: Document, ev: KeyboardEvent) => any) | null,
         handleKeyUp: ((this: Document, ev: KeyboardEvent) => any) | null,
-        ctx: CanvasRenderingContext2D
+        ctx: CanvasRenderingContext2D,
+        renderer: Renderer
     ) {
         this.player = player;
         this.collisionHandler = collisionHandler;
@@ -29,6 +32,7 @@ class gameGlobals {
         this.handleKeyDown = handleKeyDown;
         this.handleKeyUp = handleKeyUp;
         this.ctx = ctx;
+        this.renderer = renderer;
     }
 
     cleanup() {
@@ -66,6 +70,8 @@ const gameFrame = () => {
     );
 
     deadplayer.next_frame(currentGlobals.collisionHandler, currentGlobals.ctx);
+
+    currentGlobals.renderer.render(currentGlobals.ctx);
 };
 
 const start_game = async (
@@ -78,12 +84,26 @@ const start_game = async (
     // set up 2d binary search
     const backgroundCollision = new my2DBinarySearch(edges);
     const collisionHandler = new CollisionHandler(backgroundCollision);
+    const renderer = new Renderer();
 
     // create player
-    const player = new Player(20, 20, 0);
+    const player = new Player({
+        x: 20,
+        y: 20,
+        index: 0,
+    });
     collisionHandler.addCollisionObject("player", player);
+    renderer.addItem(player);
 
-    // const weapon = new MeleeWeapon("test", 5, 21, 10, collisionHandler, player);
+    // const weapon = new MeleeWeapon(
+    //     "test",
+    //     5,
+    //     21,
+    //     10,
+    //     -1,
+    //     collisionHandler,
+    //     player
+    // );
 
     const weapon = new RemoteWeapon(
         "test",
@@ -94,9 +114,15 @@ const start_game = async (
         player
     );
     player.bind_to_weapon(weapon);
+    renderer.addItem(weapon);
 
-    deadplayer = new Player(100, 20, 1);
+    deadplayer = new Player({
+        x: 100,
+        y: 20,
+        index: 1,
+    });
     collisionHandler.addCollisionObject("player", deadplayer);
+    renderer.addItem(deadplayer);
 
     // create keyboard mapper
     const keyMapper = new KeyMapper({
@@ -115,7 +141,6 @@ const start_game = async (
         } else if (e.code === keyMapper.jumpKey) {
             player.jump();
         } else if (e.code === keyMapper.attackKey) {
-            console.log("attack");
             player.attack();
         }
     };
@@ -140,7 +165,8 @@ const start_game = async (
         null,
         handleKeyDown,
         handleKeyUp,
-        ctx
+        ctx,
+        renderer
     );
 
     // draw background
@@ -163,4 +189,16 @@ const cleanup_game = async () => {
     currentGlobals = null;
 };
 
-export { start_game, cleanup_game };
+const createRenderingObject = function (className: any, ...args: any[]) {
+    if (!currentGlobals) {
+        console.error("current globals does not exist");
+        return;
+    }
+    const myclass = new className(...Array.from(arguments).slice(1));
+    if (myclass.zIndex === undefined) myclass.zIndex = 0;
+    if (myclass.destoryed === undefined) myclass.destoryed = false;
+    currentGlobals.renderer.addItem(myclass);
+    return myclass;
+};
+
+export { start_game, cleanup_game, createRenderingObject };

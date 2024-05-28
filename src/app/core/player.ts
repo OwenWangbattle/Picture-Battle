@@ -23,6 +23,8 @@ class Player extends CollidableObject {
     // player horizontal speed
     hSpeed: number;
 
+    zIndex: number;
+
     // player pending actions
     pendingAction: {
         left: boolean;
@@ -49,30 +51,44 @@ class Player extends CollidableObject {
     health: number;
     invincible: boolean;
 
+    destoryed: boolean;
+
     // ---------- player static attributes ----------
     // player collision box
-    // player_height: number = 21;
-    // player_width: number = 11;
+    static height: number = 21;
+    static width: number = 11;
 
     // player jump release multiplier
-    cancelFactor: number = 0.4;
+    static cancelFactor: number = 0.4;
 
     // player gravity
-    gravity: number = 0.4;
+    static gravity: number = 0.4;
 
     // player move speed
-    moveSpeed: number = 3;
+    static moveSpeed: number = 3;
     // player max falling speed
-    maxFallingSpeed: number = 9;
+    static maxFallingSpeed: number = 9;
     // player first jump initial speed
-    jumpSpeed: number = 8.5;
+    static jumpSpeed: number = 8.5;
     // player double jump initial speed
-    dJumpSpeed: number = 7;
+    static dJumpSpeed: number = 7;
 
-    coyote_time_limit: number = 0.08; //seconds
+    static coyote_time_limit: number = 0.08; //seconds
 
-    constructor(x: number, y: number, index: number, health = 100) {
-        super(x, y, 21, 11, 0);
+    constructor(payload: {
+        x: number;
+        y: number;
+        index: number;
+        zIndex?: number;
+        health?: number;
+    }) {
+        const x = payload.x;
+        const y = payload.y;
+        const index = payload.index;
+        const zIndex = payload.zIndex || 0;
+        const health = payload.health || 100;
+
+        super(x, y, Player.height, Player.width, 0);
 
         this.index = index;
 
@@ -99,6 +115,9 @@ class Player extends CollidableObject {
         this.weapon = null;
         this.health = health;
         this.invincible = false;
+
+        this.zIndex = zIndex;
+        this.destoryed = false;
     }
 
     bind_to_weapon(weapon: Weapon) {
@@ -240,33 +259,33 @@ class Player extends CollidableObject {
     ) {
         // consume pending actions
         this.hSpeed = 0;
-        if (this.pendingAction.left) this.hSpeed = -this.moveSpeed;
-        else if (this.pendingAction.right) this.hSpeed = this.moveSpeed;
+        if (this.pendingAction.left) this.hSpeed = -Player.moveSpeed;
+        else if (this.pendingAction.right) this.hSpeed = Player.moveSpeed;
 
         // jump handle
         if (this.pendingAction.jump) {
             if (this.jumpCounter === 0 || this.onGround) {
                 // first jump
                 this.jumpCounter = 1;
-                this.vSpeed = -this.jumpSpeed;
+                this.vSpeed = -Player.jumpSpeed;
 
                 this.clearCoyoteTimer();
             } else if (this.jumpCounter === 1) {
                 // double jump
                 this.jumpCounter += 1;
-                this.vSpeed = -this.dJumpSpeed;
+                this.vSpeed = -Player.dJumpSpeed;
             }
         }
         this.pendingAction.jump = false;
 
         // release handle
         this.vSpeed = Math.min(
-            this.maxFallingSpeed,
-            this.vSpeed + this.gravity
+            Player.maxFallingSpeed,
+            this.vSpeed + Player.gravity
         );
 
         if (this.pendingAction.release) {
-            if (this.vSpeed < 0) this.vSpeed *= this.cancelFactor;
+            if (this.vSpeed < 0) this.vSpeed *= Player.cancelFactor;
         }
         this.pendingAction.release = false;
 
@@ -302,7 +321,7 @@ class Player extends CollidableObject {
                     (new Date().getTime() - this.coyote_time.timer.getTime()) /
                     1000;
 
-                if (seconds > this.coyote_time_limit) {
+                if (seconds > Player.coyote_time_limit) {
                     this.jumpCounter = Math.max(1, this.jumpCounter);
                     this.clearCoyoteTimer();
                 }
@@ -310,11 +329,7 @@ class Player extends CollidableObject {
         } else this.clearCoyoteTimer();
 
         // render new position
-        this.render(ctx);
-
-        if (this.weapon) {
-            this.weapon.render(ctx);
-        }
+        // this.render(ctx);
     }
 
     // player actions
