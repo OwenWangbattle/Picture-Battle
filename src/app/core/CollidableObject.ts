@@ -1,4 +1,5 @@
 // for now, always assuming as a rectangle with possibly rotation
+import SAT from './objectcrash';
 class CollidableObject {
     x: number;
     y: number;
@@ -23,17 +24,16 @@ class CollidableObject {
     collide(other: CollidableObject) {
         // to-do
         // currently do not use angle
-
-        if (
-            this.x <= other.x + other.width &&
-            this.x + this.width >= other.x &&
-            this.y <= other.y + other.height &&
-            this.y + this.height >= other.y
-        ) {
-            return true;
-        }
-
-        return false;
+        let sat = new SAT();
+        // if (
+        //     this.x <= other.x + other.width &&
+        //     this.x + this.width >= other.x &&
+        //     this.y <= other.y + other.height &&
+        //     this.y + this.height >= other.y
+        // ) {
+        //     return true;
+        // }
+        return sat.collide(this, other);
     }
 }
 
