@@ -9,6 +9,7 @@ type propsType = {
     edges: { x: number; y: number }[];
     width: number;
     height: number;
+    img: HTMLImageElement;
 };
 
 export default function Canvas(props: propsType) {
@@ -22,7 +23,7 @@ export default function Canvas(props: propsType) {
 
         if (!context) return;
 
-        start_game(context, props.edges);
+        start_game(context, props.edges, props.img);
 
         return () => {
             cleanup_game();

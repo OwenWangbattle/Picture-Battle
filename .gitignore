@@ -159,3 +159,5 @@ next.config.mjs
 
 # typescript
 *.tsbuildinfo
+
+public/uploads/

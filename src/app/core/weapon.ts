@@ -122,18 +122,18 @@ class MeleeWeapon extends Weapon {
             this.collisionHandler.removeCollisionObject(index);
             this.slash = null;
             this.status = Weapon.STATUS.FREE;
-        }, 1000);
+        }, 500);
     }
 
     update(ctx: CanvasRenderingContext2D) {
         if (!this.slash) return;
 
-        ctx.clearRect(
-            this.slash.x,
-            this.slash.y,
-            this.slash.width + 1,
-            this.slash.height + 1
-        );
+        // ctx.clearRect(
+        //     this.slash.x,
+        //     this.slash.y,
+        //     this.slash.width + 1,
+        //     this.slash.height + 1
+        // );
         this.slash.x = this.player.x + this.player.width;
         this.slash.y = this.player.y;
     }
@@ -178,7 +178,7 @@ class Bullet extends DamagableObject {
 
     next_frame(ctx: CanvasRenderingContext2D) {
         if (this.destoryed) return;
-        ctx.clearRect(this.x, this.y, this.width + 1, this.height + 1);
+        // ctx.clearRect(this.x, this.y, this.width + 1, this.height + 1);
 
         // to do
         // handle direction

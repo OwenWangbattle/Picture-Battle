@@ -2,10 +2,19 @@ const sorted = require("sorted-array-functions");
 
 class Renderer {
     list: [];
+    background: HTMLImageElement;
+    ctx: CanvasRenderingContext2D;
 
-    constructor(list?: []) {
+    constructor(
+        background: HTMLImageElement,
+        ctx: CanvasRenderingContext2D,
+        list?: []
+    ) {
         if (list) this.list = list;
         else this.list = [];
+
+        this.background = background;
+        this.ctx = ctx;
     }
 
     static compare(a: any, b: any) {
@@ -32,8 +41,9 @@ class Renderer {
         }, []);
     }
 
-    render(ctx: CanvasRenderingContext2D) {
+    render() {
         console.log("start render");
+        this.ctx.drawImage(this.background, 0, 0);
         for (let i = 0; i < this.list.length; ++i) {
             const item = this.list[i] as any;
             if (item.destoryed) {
@@ -41,7 +51,7 @@ class Renderer {
                 continue;
             }
             console.log(`render ${item.zIndex}`);
-            item.render(ctx);
+            item.render(this.ctx);
         }
         console.log("end reneder");
     }
