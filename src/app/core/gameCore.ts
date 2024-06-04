@@ -4,7 +4,8 @@ import CollisionHandler from "./CollisionHandler";
 import my2DBinarySearch from "./bs2d";
 import { MeleeWeapon, RemoteWeapon } from "./weapon";
 import Renderer from "./renderer";
-import keyMap from "../../local/keymap.json";
+import frameAdvancer from "./frameAdvancer";
+
 const fps = 50;
 
 class gameGlobals {
@@ -13,6 +14,7 @@ class gameGlobals {
     intervalID: NodeJS.Timeout | null;
     ctx: CanvasRenderingContext2D;
     renderer: Renderer;
+    FrameAdvancer: frameAdvancer;
 
     handleKeyDown: ((this: Document, ev: KeyboardEvent) => any) | null;
     handleKeyUp: ((this: Document, ev: KeyboardEvent) => any) | null;
@@ -24,7 +26,8 @@ class gameGlobals {
         handleKeyDown: ((this: Document, ev: KeyboardEvent) => any) | null,
         handleKeyUp: ((this: Document, ev: KeyboardEvent) => any) | null,
         ctx: CanvasRenderingContext2D,
-        renderer: Renderer
+        renderer: Renderer,
+        FrameAdvancer: frameAdvancer
     ) {
         this.player = player;
         this.collisionHandler = collisionHandler;
@@ -33,6 +36,7 @@ class gameGlobals {
         this.handleKeyUp = handleKeyUp;
         this.ctx = ctx;
         this.renderer = renderer;
+        this.FrameAdvancer = FrameAdvancer;
     }
 
     cleanup() {
@@ -71,12 +75,13 @@ const gameFrame = () => {
 
     deadplayer.next_frame(currentGlobals.collisionHandler, currentGlobals.ctx);
 
-    currentGlobals.renderer.render(currentGlobals.ctx);
+    currentGlobals.renderer.render();
 };
 
 const start_game = async (
     ctx: CanvasRenderingContext2D,
-    edges: { x: number; y: number }[]
+    edges: { x: number; y: number }[],
+    img: HTMLImageElement
 ) => {
     // clean up if there are left overs
     if (currentGlobals) cleanup_game();
@@ -84,7 +89,8 @@ const start_game = async (
     // set up 2d binary search
     const backgroundCollision = new my2DBinarySearch(edges);
     const collisionHandler = new CollisionHandler(backgroundCollision);
-    const renderer = new Renderer();
+    const renderer = new Renderer(img, ctx);
+    const FrameAdvancer = new frameAdvancer([]);
 
     // create player
     const player = new Player({
@@ -94,6 +100,7 @@ const start_game = async (
     });
     collisionHandler.addCollisionObject("player", player);
     renderer.addItem(player);
+    FrameAdvancer.addItem(player);
 
     // const weapon = new MeleeWeapon(
     //     "test",
@@ -107,7 +114,7 @@ const start_game = async (
 
     const weapon = new RemoteWeapon(
         "test",
-        5,
+        10,
         10,
         10,
         collisionHandler,
@@ -123,6 +130,7 @@ const start_game = async (
     });
     collisionHandler.addCollisionObject("player", deadplayer);
     renderer.addItem(deadplayer);
+    FrameAdvancer.addItem(deadplayer);
 
     // create keyboard mapper
 
@@ -162,13 +170,16 @@ const start_game = async (
         handleKeyDown,
         handleKeyUp,
         ctx,
-        renderer
+        renderer,
+        FrameAdvancer
     );
 
+    // ctx.drawImage(img, 0, 0);
+
     // draw background
-    for (const edge of edges) {
-        ctx.fillRect(edge.x, edge.y, 1, 1);
-    }
+    // for (const edge of edges) {
+    //     ctx.fillRect(edge.x, edge.y, 1, 1);
+    // }
 
     // start the game loop
     let intervalID = setInterval(() => {
@@ -193,6 +204,9 @@ const createRenderingObject = function (className: any, ...args: any[]) {
     const myclass = new className(...Array.from(arguments).slice(1));
     if (myclass.zIndex === undefined) myclass.zIndex = 0;
     if (myclass.destoryed === undefined) myclass.destoryed = false;
+
+    // if (myclass.lastX === undefined) myclass.lastX = myclass.x;
+    // if (myclass.lastY === undefined) myclass.lastY = myclass.y;
     currentGlobals.renderer.addItem(myclass);
     return myclass;
 };

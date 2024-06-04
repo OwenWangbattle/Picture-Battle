@@ -369,12 +369,12 @@ class Player extends CollidableObject {
     }
 
     erase(ctx: CanvasRenderingContext2D) {
-        ctx.clearRect(
-            Math.floor(this.x),
-            Math.floor(this.y),
-            this.width + 1,
-            this.height + 1
-        );
+        // ctx.clearRect(
+        //     Math.floor(this.x),
+        //     Math.floor(this.y),
+        //     this.width + 1,
+        //     this.height + 1
+        // );
     }
 
     startCoyoteTimer() {
