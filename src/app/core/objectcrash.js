@@ -97,5 +97,5 @@ SAT.prototype.collide = function(obj1, obj2){
     return true;
 };
 
-module.exports = { SAT };
+// module.exports = { SAT };
 export default SAT;

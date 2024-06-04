@@ -4,7 +4,7 @@ import CollisionHandler from "./CollisionHandler";
 import my2DBinarySearch from "./bs2d";
 import { MeleeWeapon, RemoteWeapon } from "./weapon";
 import Renderer from "./renderer";
-
+import keyMap from "../../local/keymap.json";
 const fps = 50;
 
 class gameGlobals {
@@ -125,12 +125,8 @@ const start_game = async (
     renderer.addItem(deadplayer);
 
     // create keyboard mapper
-    const keyMapper = new KeyMapper({
-        jumpKey: "ShiftLeft",
-        moveLeftKey: "ArrowLeft",
-        moveRightKey: "ArrowRight",
-        attackKey: "Space",
-    });
+
+    const keyMapper = new KeyMapper();
 
     // keyboard handler
     let handleKeyDown = (e: KeyboardEvent) => {
