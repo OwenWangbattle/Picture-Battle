@@ -1,0 +1,9 @@
+$padding: 12px 15px;
+.changeButton{
+    padding: $padding;
+    border: solid 1px black;
+    text-align: center;
+}
+.selected {
+    background-color: #ddd; // Or any other styles to indicate selection
+}
