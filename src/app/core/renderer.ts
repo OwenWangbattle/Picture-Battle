@@ -42,7 +42,7 @@ class Renderer {
     }
 
     render() {
-        console.log("start render");
+        // console.log("start render");
         this.ctx.drawImage(this.background, 0, 0);
         for (let i = 0; i < this.list.length; ++i) {
             const item = this.list[i] as any;
@@ -50,10 +50,10 @@ class Renderer {
                 this.removeItem(i);
                 continue;
             }
-            console.log(`render ${item.zIndex}`);
+            // console.log(`render ${item.zIndex}`);
             item.render(this.ctx);
         }
-        console.log("end reneder");
+        // console.log("end reneder");
     }
 }
 

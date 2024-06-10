@@ -34,7 +34,7 @@ const Settings = () => {
       </table>
       <div className={styles.return}>
         <Link href="../game">
-          <button>return</button>
+          <p>return</p>
         </Link>
       </div>
     </div>
