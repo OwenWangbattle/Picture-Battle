@@ -1,9 +1,14 @@
-$padding: 12px 15px;
-.changeButton{
-    padding: $padding;
-    border: solid 1px black;
+.changeButton {
     text-align: center;
+    cursor: pointer;
+    font-weight: 100;
 }
+
+.changeButton:hover:not(.selected) {
+    background-color: rgba(29, 128, 226, 0.3);
+}
+
 .selected {
-    background-color: #1d80e2; // Or any other styles to indicate selection
+    background-color: #1d80e2;
+    color: white;
 }

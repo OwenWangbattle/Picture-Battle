@@ -8,6 +8,7 @@ $shadow-color: rgba(0, 0, 0, 0.15);
 $padding: 12px 15px;
 $font-size: 36px; // 放大一倍的字体大小
 $min-width: 500px; // 放大一倍的最小宽度
+
 .container {
     display: flex;
     justify-content: center;
@@ -15,37 +16,61 @@ $min-width: 500px; // 放大一倍的最小宽度
     height: 100vh;
     background-color: $background-color;
     font-family: $font-family;
-    padding: 40px; // 放大一倍的内边距
-  }
-  
-  .styledTable {
-    border-collapse: collapse;
-    margin: 50px 0; // 放大一倍的外边距
-    font-size: $font-size;
-    min-width: $min-width;
-    box-shadow: 0 0 40px $shadow-color; // 放大一倍的阴影
-  }
-  
-  .styledTable thead tr {
-    background-color: $table-background-color;
-    color: $table-font-color;
-    text-align: center;
-  }
-  
-  .styledTable th{
-    padding: $padding;
-    text-align: center;
-  }
-  .styledTable td {
-    padding: $padding;
-    border: solid 1px black;
-    text-align: center  ;
-  }
-  
-  .styledTable tbody tr {
-    border-bottom: 1px solid $border-color;
-  }
-  .return{
+    padding: 40px;
+
+    .styledTable {
+        border-collapse: collapse;
+        margin: 50px 0;
+        font-size: $font-size;
+        min-width: $min-width;
+        box-shadow: 0 0 40px $shadow-color;
+
+        user-select: none;
+
+        > header {
+            padding: 20px;
+            background-color: $table-background-color;
+            text-align: center;
+            color: white;
+        }
+        > div {
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+
+            > div {
+                display: flex;
+                align-items: center;
+                flex-direction: row;
+                justify-content: space-between;
+                width: 100%;
+
+                border: 1px solid black;
+                border-bottom: 0;
+
+                box-sizing: border-box;
+
+                > span {
+                    width: 50%;
+                    text-align: center;
+                    border-right: 1px solid black;
+                    padding: 20px 0;
+                    background-color: rgba(0, 152, 121, 0.3);
+                }
+
+                > div {
+                    width: 50%;
+                    padding: 20px 0;
+                }
+            }
+            > div:last-child {
+                border-bottom: 1px solid black;
+            }
+        }
+    }
+}
+
+.return {
     position: absolute;
     top: 10px;
     left: 10px;
@@ -56,5 +81,4 @@ $min-width: 500px; // 放大一倍的最小宽度
     border: none;
     border-radius: 5px;
     cursor: pointer;
-  
-  }
+}

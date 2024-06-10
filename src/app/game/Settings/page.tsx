@@ -4,41 +4,38 @@ import Link from "next/link";
 import ChangeButton from "./components/changeButton";
 
 const Settings = () => {
-  return (
-    <div className={styles.container}>
-      <table className={styles.styledTable}>
-        <thead>
-          <tr>
-            <th>Keyboard Settings</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Move Left</td>
-            <ChangeButton type="moveLeftKey" />
-          </tr>
-          <tr>
-            <td>Move Right</td>
-            <ChangeButton type="moveRightKey" />
-          </tr>
-          <tr>
-            <td>Jump</td>
-            <ChangeButton type="jumpKey" />
-          </tr>
-          <tr>
-            <td>Attack</td>
-            <ChangeButton type="attackKey" />
-          </tr>
-        </tbody>
-      </table>
-      <div className={styles.return}>
-        <Link href="../game">
-          <p>return</p>
-        </Link>
-      </div>
-    </div>
-  );
+    return (
+        <div className={styles.container}>
+            <div className={styles.styledTable}>
+                <header>
+                    <div>Keyboard Settings</div>
+                </header>
+                <div>
+                    <div>
+                        <span>Move Left</span>
+                        <ChangeButton type="moveLeftKey" />
+                    </div>
+                    <div>
+                        <span>Move Right</span>
+                        <ChangeButton type="moveRightKey" />
+                    </div>
+                    <div>
+                        <span>Jump</span>
+                        <ChangeButton type="jumpKey" />
+                    </div>
+                    <div>
+                        <span>Attack</span>
+                        <ChangeButton type="attackKey" />
+                    </div>
+                </div>
+            </div>
+            <Link href="../game">
+                <div className={styles.return}>
+                    <p>return</p>
+                </div>
+            </Link>
+        </div>
+    );
 };
 
 export default Settings;
