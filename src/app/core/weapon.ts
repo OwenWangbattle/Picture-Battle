@@ -61,7 +61,7 @@ class MeleeWeaponSlash extends DamagableObject {
         height: number,
         width: number,
         angle: number,
-        damage: number,
+        damage: number, 
         belong: MeleeWeapon
     ) {
         super(x, y, height, width, angle, damage);
@@ -143,13 +143,28 @@ class MeleeWeapon extends Weapon {
         this.slash?.render(ctx);
     }
 }
+const remoteWeaponDirection = function(player: Player){
+    const posx = player.x + player.width + 1, posy = player.y;
+    let mouseX = player.face === Player.FACE.RIGHT ? 1000 : 0;
+    let mouseY = posy;
+    // window.addEventListener("click", (e) => {
+    //      mouseX = e.clientX;
+    //      mouseY = e.clientY;
+    // });
+    let angle = Math.atan2(mouseY - posy, mouseX - posx);
+    if(player.hSpeed !== 0 && player.vSpeed !== 0){
+        angle = Math.atan2(player.vSpeed, player.hSpeed);
+    }
+    console.log(mouseX, mouseY);
 
+    return angle;
+}
 class Bullet extends DamagableObject {
     speed: number;
     direction: number;
     collisionHandler: CollisionHandler;
     index: number;
-
+    fromPlayer: Player;
     zIndex: number;
 
     destoryed: boolean;
@@ -162,6 +177,7 @@ class Bullet extends DamagableObject {
         angle: number,
         damage: number,
         speed: number,
+        fromPlayer: Player,
         direction: number,
         collisionHandler: CollisionHandler,
         zIndex: number
@@ -170,7 +186,7 @@ class Bullet extends DamagableObject {
         this.speed = speed;
         this.direction = direction;
         this.collisionHandler = collisionHandler;
-
+        this.fromPlayer = fromPlayer;
         this.index = collisionHandler.addCollisionObject("attack", this);
         this.destoryed = false;
         this.zIndex = zIndex;
@@ -182,9 +198,9 @@ class Bullet extends DamagableObject {
 
         // to do
         // handle direction
-
-        this.x = this.x + this.speed;
-
+        const theta = this.direction;
+        this.x = this.x + this.speed * Math.cos(theta);   
+        this.y = this.y + this.speed * Math.sin(theta);
         if (this.x < 0 || this.x > 1000 || this.y < 0 || this.y > 2000)
             this.destory();
         if (
@@ -241,17 +257,18 @@ class RemoteWeapon extends Weapon {
     attack() {
         if (this.status !== Weapon.STATUS.FREE) return;
         this.status = Weapon.STATUS.ATTACK;
-
+        const theta = remoteWeaponDirection(this.player);
         createRenderingObject(
             Bullet,
             this.player.x + this.player.width + 1,
             this.player.y,
             this.bulletHeight,
             this.bulletWidth,
-            0,
+            theta,
             this.damage,
             10,
-            0,
+            this.player,
+            theta,
             this.collisionHandler,
             1
         );
