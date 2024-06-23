@@ -26,7 +26,8 @@
         "**/*.ts",
         "**/*.tsx",
         ".next/types/**/*.ts",
-        "src/app/core/bs2d.js"
+        "src/app/core/bs2d.js",
+        "src/app/wstest/page.jsx"
     ],
     "exclude": ["node_modules"]
 }
