@@ -28,6 +28,6 @@
         ".next/types/**/*.ts",
         "src/app/core/bs2d.js",
         "src/app/wstest/page.jsx"
-    ],
+, "src/app/game/wstest.js"    ],
     "exclude": ["node_modules"]
 }

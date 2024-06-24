@@ -121,7 +121,7 @@ export default function mainPage() {
       setUploading(false);
     }
   };
-
+  const handleRoomSystem = async () => {};
   return (
     <div className={styles.container}>
       <div className={styles.input}>
@@ -133,6 +133,11 @@ export default function mainPage() {
         <button onClick={handleUpload} disabled={uploading}>
           Submit
         </button>
+        <div>
+          <Link href="../wstest">
+            <button onClick={handleRoomSystem}>Browser a room</button>
+          </Link>
+        </div>
         <div className={styles.settings}>
           <Link href="./game/Settings">
             <button>Settings</button>
