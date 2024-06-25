@@ -35,7 +35,7 @@ const renderRoomList = (rooms, isRoomFetching, joinRoom) => {
     );
 };
 
-const renderRoom = (players, onGameStart, onLeaveRoom) => {
+const renderRoom = (players, tempState, onGameStart, onLeaveRoom, onReady, onUnready) => {
     return (
         <div className={styles.room}>
             <h1>Room Info</h1>
@@ -50,9 +50,15 @@ const renderRoom = (players, onGameStart, onLeaveRoom) => {
                 })}
             </li>
             <div className={styles.buttons}>
-                <button onClick={onGameStart} disabled={players.length !== 2}>
-                    Start Game
-                </button>
+                {tempState.status === 'host' ? (
+                    <button onClick={onGameStart} disabled={players.length !== 2}>
+                     Start Game
+                    </button>
+                    ) : (
+                        tempState.ready ? (<button onClick={onUnready}>Unready</button>) :
+                        (<button onClick={onReady}>Ready</button>)
+                    )
+                }
                 <button onClick={onLeaveRoom}>Leave Room</button>
             </div>
         </div>
@@ -71,6 +77,8 @@ const Index = () => {
 
     const [inRoom, setInRoom] = useState(false);
     const [players, setPlayers] = useState([]);
+
+    const [tempState, setTempState] = useState({id: socket.id, status: undefined, ready: false});
 
     const onNewRoomInfoChange = (item, value) => {
         if (typeof value !== "string") value = value.target.value;
@@ -109,6 +117,18 @@ const Index = () => {
             });
         });
 
+        socket.on("ready", (message)=>{
+            setTempState((prev)=>({
+                ...prev,
+                ready: true
+            }));
+        });
+        socket.on("unready", (message)=>{
+            setTempState((prev)=>({
+                ...prev,
+                ready: false
+            }));
+        });
         socket.on("error", console.error);
 
         setIsRoomFetching(true);
@@ -119,12 +139,34 @@ const Index = () => {
         socket.emit("start game");
         console.log("game started!");
     };
+    const onReady = () => {
+        socket.emit("ready");
+        setTempState((prev)=>({
+            ...prev,
+            ready: true
+        }));
 
+        console.log("ready!");
+    }
+    const onUnready = () => {
+        socket.emit("unready");
+        setTempState((prev)=>({
+            ...prev,
+            ready: false
+        }));
+
+        console.log("unready!");
+    }
     const joinRoom = (name) => {
         socket.emit("join room", {
             name: name,
             pwd: "",
         });
+        if(tempState.status === undefined){
+            tempState.status = "guest";
+            tempState.ready = false;
+        }
+
         setPlayers([]);
         setInRoom(true);
     };
@@ -147,6 +189,8 @@ const Index = () => {
             name: newRoomInfo.name,
             pwd: newRoomInfo.password,
         });
+        tempState.status = "host";
+        tempState.ready = false;
         setCreateRoomOpen(false);
         setNewRoomInfo({
             name: "",
@@ -161,7 +205,7 @@ const Index = () => {
         <div className={styles.container}>
             <div>
                 {inRoom ? (
-                    renderRoom(players, onGameStart, leaveRoom)
+                    renderRoom(players, tempState, onGameStart, leaveRoom, onReady, onUnready)
                 ) : (
                     <>
                         <h1>Rooms</h1>
