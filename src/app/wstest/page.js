@@ -154,6 +154,19 @@ const Index = () => {
                 ready: false,
             }));
         });
+
+        socket.on("game start", (_) => {
+            console.log("game start");
+            setState((state) => {
+                return {
+                    ...state,
+                    host: tempState.status === "host",
+                    socket,
+                };
+            });
+            router.push("/game");
+        });
+
         socket.on("error", console.error);
 
         setTempState((prev) => {
@@ -172,6 +185,7 @@ const Index = () => {
         setState((state) => {
             return {
                 ...state,
+                host: tempState.status === "host",
                 socket,
             };
         });
@@ -237,6 +251,7 @@ const Index = () => {
         // setIsRoomFetching(true);
         // fetchRoom();
         joinRoom(newRoomInfo.name);
+        onReady();
     };
 
     return (

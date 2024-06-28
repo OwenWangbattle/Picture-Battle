@@ -11,6 +11,7 @@ import { Socket } from "socket.io-client";
 
 type state = {
     socket: Socket | null;
+    host: boolean;
 };
 
 type context = {
@@ -27,6 +28,7 @@ export default function ContextProvider({
 }) {
     const [state, setState] = useState<state>({
         socket: null,
+        host: false,
     });
 
     return (

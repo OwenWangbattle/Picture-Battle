@@ -4,7 +4,6 @@ import { ChangeEvent, useState } from "react";
 import styles from "./page.module.scss";
 import Canvas from "./canvas";
 import Link from "next/link";
-import tempState from "../wstest/page";
 import { useMyContext } from "../MyContext";
 interface IResizeImageOptions {
     maxSize: number;
@@ -70,7 +69,22 @@ export default function mainPage() {
     const [response, setResponse] = useState<any>(null);
 
     const { state } = useMyContext();
-    console.log(state);
+
+    if (!state.socket) {
+        window.location.href = "/";
+    }
+
+    if (state.socket && !state.host) {
+        state.socket.on("map", (message) => {
+            console.log(message);
+            const img = new Image();
+            img.src = message.img;
+            setResponse({
+                ...message.data,
+                img: img,
+            });
+        });
+    }
 
     const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
         if (event.target.files && event.target.files.length > 0) {
@@ -114,6 +128,13 @@ export default function mainPage() {
                     data.img = img;
 
                     setResponse(data);
+
+                    if (state.socket && state.host) {
+                        state.socket.emit("map confirm", {
+                            data: data,
+                            img: result,
+                        });
+                    }
                 };
                 reader.readAsDataURL(img);
             } else {
@@ -134,7 +155,10 @@ export default function mainPage() {
                     accept=".png, .jpg, .jpeg, .webp"
                     onChange={handleFileChange}
                 />
-                <button onClick={handleUpload} disabled={uploading}>
+                <button
+                    onClick={handleUpload}
+                    disabled={uploading || !state.host}
+                >
                     Submit
                 </button>
 
@@ -152,6 +176,8 @@ export default function mainPage() {
                         height={response.height}
                         edges={response.edges}
                         img={response.img}
+                        socket={state.socket}
+                        host={state.host}
                     />
                 )}
             </div>

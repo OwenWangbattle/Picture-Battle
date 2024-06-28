@@ -5,6 +5,19 @@ import my2DBinarySearch from "./bs2d";
 import { MeleeWeapon, RemoteWeapon } from "./weapon";
 import Renderer from "./renderer";
 import frameAdvancer from "./frameAdvancer";
+import { Socket } from "socket.io-client";
+
+enum gameAction {
+    moveLeft = 1,
+    moveRight,
+    jump,
+    attack,
+}
+
+interface RemotePayload {
+    keyDown: gameAction | null;
+    keyUp: gameAction | null;
+}
 
 const fps = 50;
 
@@ -15,6 +28,7 @@ class gameGlobals {
     ctx: CanvasRenderingContext2D;
     renderer: Renderer;
     FrameAdvancer: frameAdvancer;
+    socket: Socket;
 
     handleKeyDown: ((this: Document, ev: KeyboardEvent) => any) | null;
     handleKeyUp: ((this: Document, ev: KeyboardEvent) => any) | null;
@@ -27,7 +41,8 @@ class gameGlobals {
         handleKeyUp: ((this: Document, ev: KeyboardEvent) => any) | null,
         ctx: CanvasRenderingContext2D,
         renderer: Renderer,
-        FrameAdvancer: frameAdvancer
+        FrameAdvancer: frameAdvancer,
+        socket: Socket
     ) {
         this.player = player;
         this.collisionHandler = collisionHandler;
@@ -37,6 +52,7 @@ class gameGlobals {
         this.ctx = ctx;
         this.renderer = renderer;
         this.FrameAdvancer = FrameAdvancer;
+        this.socket = socket;
     }
 
     cleanup() {
@@ -55,7 +71,7 @@ class gameGlobals {
 
 let currentGlobals: gameGlobals | null;
 
-let deadplayer: Player;
+let remotePlayer: Player;
 
 // game logics per frame
 const gameFrame = () => {
@@ -73,15 +89,30 @@ const gameFrame = () => {
         currentGlobals.ctx
     );
 
-    deadplayer.next_frame(currentGlobals.collisionHandler, currentGlobals.ctx);
+    remotePlayer.next_frame(
+        currentGlobals.collisionHandler,
+        currentGlobals.ctx
+    );
 
     currentGlobals.renderer.render();
+};
+
+const playerInitPos = {
+    x: 20,
+    y: 20,
+};
+
+const remotePlayerInitPos = {
+    x: 100,
+    y: 20,
 };
 
 const start_game = async (
     ctx: CanvasRenderingContext2D,
     edges: { x: number; y: number }[],
-    img: HTMLImageElement
+    img: HTMLImageElement,
+    socket: Socket,
+    host: boolean
 ) => {
     // clean up if there are left overs
     if (currentGlobals) cleanup_game();
@@ -94,8 +125,7 @@ const start_game = async (
 
     // create player
     const player = new Player({
-        x: 20,
-        y: 20,
+        ...(host ? playerInitPos : remotePlayerInitPos),
         index: 0,
     });
     collisionHandler.addCollisionObject("player", player);
@@ -123,14 +153,25 @@ const start_game = async (
     player.bind_to_weapon(weapon);
     renderer.addItem(weapon);
 
-    deadplayer = new Player({
-        x: 100,
-        y: 20,
+    remotePlayer = new Player({
+        ...(host ? remotePlayerInitPos : playerInitPos),
         index: 1,
     });
-    collisionHandler.addCollisionObject("player", deadplayer);
-    renderer.addItem(deadplayer);
-    FrameAdvancer.addItem(deadplayer);
+
+    const weaponRemote = new RemoteWeapon(
+        "testRemote",
+        10,
+        10,
+        10,
+        collisionHandler,
+        remotePlayer
+    );
+    remotePlayer.bind_to_weapon(weaponRemote);
+    renderer.addItem(weaponRemote);
+
+    collisionHandler.addCollisionObject("player", remotePlayer);
+    renderer.addItem(remotePlayer);
+    FrameAdvancer.addItem(remotePlayer);
 
     // create keyboard mapper
 
@@ -140,24 +181,78 @@ const start_game = async (
     let handleKeyDown = (e: KeyboardEvent) => {
         if (e.code === keyMapper.moveLeftKey) {
             player.moveLeft();
+            socket.emit("game payload", {
+                keyDown: gameAction.moveLeft,
+            } as RemotePayload);
         } else if (e.code === keyMapper.moveRightKey) {
             player.moveRight();
+            socket.emit("game payload", {
+                keyDown: gameAction.moveRight,
+            } as RemotePayload);
         } else if (e.code === keyMapper.jumpKey) {
             player.jump();
+            socket.emit("game payload", {
+                keyDown: gameAction.jump,
+            } as RemotePayload);
         } else if (e.code === keyMapper.attackKey) {
             player.attack();
+            socket.emit("game payload", {
+                keyDown: gameAction.attack,
+            } as RemotePayload);
         }
     };
 
     let handleKeyUp = (e: KeyboardEvent) => {
         if (e.code === keyMapper.moveLeftKey) {
             player.doneMoveLeft();
+            socket.emit("game payload", {
+                keyUp: gameAction.moveLeft,
+            } as RemotePayload);
         } else if (e.code === keyMapper.moveRightKey) {
             player.doneMoveRight();
+            socket.emit("game payload", {
+                keyUp: gameAction.moveRight,
+            } as RemotePayload);
         } else if (e.code === keyMapper.jumpKey) {
             player.release();
+            socket.emit("game payload", {
+                keyUp: gameAction.jump,
+            } as RemotePayload);
         }
     };
+
+    // remote player action handler
+    socket.on("player action", (payload: RemotePayload) => {
+        console.log(payload);
+        if (payload.keyDown) {
+            if (payload.keyDown.valueOf() === gameAction.moveLeft.valueOf()) {
+                remotePlayer.moveLeft();
+            } else if (
+                payload.keyDown.valueOf() === gameAction.moveRight.valueOf()
+            ) {
+                remotePlayer.moveRight();
+            } else if (
+                payload.keyDown.valueOf() === gameAction.jump.valueOf()
+            ) {
+                remotePlayer.jump();
+            } else if (
+                payload.keyDown.valueOf() === gameAction.attack.valueOf()
+            ) {
+                remotePlayer.attack();
+            }
+        }
+        if (payload.keyUp) {
+            if (payload.keyUp.valueOf() === gameAction.moveLeft.valueOf()) {
+                remotePlayer.doneMoveLeft();
+            } else if (
+                payload.keyUp.valueOf() === gameAction.moveRight.valueOf()
+            ) {
+                remotePlayer.doneMoveRight();
+            } else if (payload.keyUp.valueOf() === gameAction.jump.valueOf()) {
+                remotePlayer.release();
+            }
+        }
+    });
 
     document.addEventListener("keydown", handleKeyDown);
     document.addEventListener("keyup", handleKeyUp);
@@ -171,7 +266,8 @@ const start_game = async (
         handleKeyUp,
         ctx,
         renderer,
-        FrameAdvancer
+        FrameAdvancer,
+        socket
     );
 
     // ctx.drawImage(img, 0, 0);
