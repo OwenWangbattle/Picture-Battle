@@ -256,7 +256,7 @@ const Index = () => {
 
     return (
         <div className={styles.container}>
-            <div>
+            <div className={styles.roomsys}>
                 {inRoom ? (
                     renderRoom(
                         players,
