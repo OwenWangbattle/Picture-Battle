@@ -4,7 +4,7 @@ import { ChangeEvent, useState } from "react";
 import styles from "./page.module.scss";
 import Canvas from "./canvas";
 import Link from "next/link";
-import tempState from "../wstest/page";
+import { useMyContext } from "../MyContext";
 interface IResizeImageOptions {
   maxSize: number;
   file: File;
@@ -68,6 +68,24 @@ export default function mainPage() {
   const [uploading, setUploading] = useState<boolean>(false);
   const [response, setResponse] = useState<any>(null);
 
+  const { state } = useMyContext();
+
+  // if (!state.socket) {
+  //   window.location.href = "/";
+  // }
+
+  if (state.socket && !state.host) {
+    state.socket.on("map", (message) => {
+      console.log(message);
+      const img = new Image();
+      img.src = message.img;
+      setResponse({
+        ...message.data,
+        img: img,
+      });
+    });
+  }
+
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
       setSelectedFile(event.target.files[0]);
@@ -110,6 +128,13 @@ export default function mainPage() {
           data.img = img;
 
           setResponse(data);
+
+          if (state.socket && state.host) {
+            state.socket.emit("map confirm", {
+              data: data,
+              img: result,
+            });
+          }
         };
         reader.readAsDataURL(img);
       } else {
@@ -130,15 +155,18 @@ export default function mainPage() {
           accept=".png, .jpg, .jpeg, .webp"
           onChange={handleFileChange}
         />
-        <button onClick={handleUpload} disabled={uploading}>
+        <button
+          onClick={handleUpload}
+          disabled={uploading || !state.host}
+          className={styles.submit}
+        >
           Submit
         </button>
-
-        <div className={styles.settings}>
-          <Link href="./game/Settings">
-            <button>Settings</button>
-          </Link>
-        </div>
+        <Link href="./game/Settings">
+          <div className={styles.settings}>
+            <button></button>
+          </div>
+        </Link>
       </div>
 
       <div className={styles.canvasContainer}>
@@ -148,6 +176,8 @@ export default function mainPage() {
             height={response.height}
             edges={response.edges}
             img={response.img}
+            socket={state.socket}
+            host={state.host}
           />
         )}
       </div>

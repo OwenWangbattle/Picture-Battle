@@ -1,3 +1,19 @@
+@font-face {
+  font-family: 'PixelFont';
+  src: url('../../bb3273/bb3273.ttf') format('truetype');
+}
+
+@keyframes rainbow-color {
+  0% {color: red;}
+  14% {color: orange;}
+  28% {color: yellow;}
+  42% {color: green;}
+  57% {color: blue;}
+  71% {color: indigo;}
+  85% {color: violet;}
+  100% {color: red;}
+}
+
 .main {
   display: flex;
   flex-direction: column;
@@ -5,5 +21,26 @@
   align-items: center;
   padding: 6rem;
   min-height: 100vh;
+  background-image: url('../../pictures/background.jpg');
+  background-size:cover;
+  background-position:center;
+}
+.title{
+  font-family: 'PixelFont';
+  font-weight: bold;
+  font-size: 8rem;
+  animation: rainbow-color 8s infinite linear;
+  text-shadow: 2px 2px 4px #000000;
+  text-align: center;
 }
 
+.play{
+  font-family: 'PixelFont';
+  font-weight: bold;
+  font-size: 4rem;
+  text-align: center;
+  position: absolute;
+  background-color: yellowgreen;
+  left: 45%;
+  top: 55%;
+}

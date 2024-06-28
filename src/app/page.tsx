@@ -5,9 +5,10 @@ import Link from "next/link";
 export default function Home() {
   return (
     <main className={styles.main}>
+      <h1 className={styles.title}>Picture Battle</h1>
       <div>
         <Link href="./wstest">
-          <button>Browser a room</button>
+          <button className={styles.play}>Play</button>
         </Link>
       </div>
     </main>

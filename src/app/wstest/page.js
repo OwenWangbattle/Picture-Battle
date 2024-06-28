@@ -4,8 +4,8 @@ import React, { useState, useEffect } from "react";
 import io from "socket.io-client";
 
 import styles from "./page.module.scss";
-
-const socket = io("http://localhost:3001");
+import { useRouter } from "next/navigation";
+import { useMyContext } from "../MyContext";
 
 const renderRoomList = (rooms, isRoomFetching, joinRoom) => {
     if (isRoomFetching) {
@@ -35,7 +35,14 @@ const renderRoomList = (rooms, isRoomFetching, joinRoom) => {
     );
 };
 
-const renderRoom = (players, tempState, onGameStart, onLeaveRoom, onReady, onUnready) => {
+const renderRoom = (
+    players,
+    tempState,
+    onGameStart,
+    onLeaveRoom,
+    onReady,
+    onUnready
+) => {
     return (
         <div className={styles.room}>
             <h1>Room Info</h1>
@@ -50,15 +57,18 @@ const renderRoom = (players, tempState, onGameStart, onLeaveRoom, onReady, onUnr
                 })}
             </li>
             <div className={styles.buttons}>
-                {tempState.status === 'host' ? (
-                    <button onClick={onGameStart} disabled={players.length !== 2}>
-                     Start Game
+                {tempState.status === "host" ? (
+                    <button
+                        onClick={onGameStart}
+                        disabled={players.length !== 2}
+                    >
+                        Start Game
                     </button>
-                    ) : (
-                        tempState.ready ? (<button onClick={onUnready}>Unready</button>) :
-                        (<button onClick={onReady}>Ready</button>)
-                    )
-                }
+                ) : tempState.ready ? (
+                    <button onClick={onUnready}>Unready</button>
+                ) : (
+                    <button onClick={onReady}>Ready</button>
+                )}
                 <button onClick={onLeaveRoom}>Leave Room</button>
             </div>
         </div>
@@ -66,6 +76,11 @@ const renderRoom = (players, tempState, onGameStart, onLeaveRoom, onReady, onUnr
 };
 
 const Index = () => {
+    const router = useRouter();
+    const { setState } = useMyContext();
+
+    const [socket, setSocket] = useState(null);
+
     const [rooms, setRooms] = useState([]);
     const [isRoomFetching, setIsRoomFetching] = useState(false);
 
@@ -78,7 +93,11 @@ const Index = () => {
     const [inRoom, setInRoom] = useState(false);
     const [players, setPlayers] = useState([]);
 
-    const [tempState, setTempState] = useState({id: socket.id, status: undefined, ready: false});
+    const [tempState, setTempState] = useState({
+        id: null,
+        status: undefined,
+        ready: false,
+    });
 
     const onNewRoomInfoChange = (item, value) => {
         if (typeof value !== "string") value = value.target.value;
@@ -91,6 +110,12 @@ const Index = () => {
     };
 
     useEffect(() => {
+        setSocket(io("http://localhost:3001"));
+    }, []);
+
+    useEffect(() => {
+        if (!socket) return;
+
         socket.on("chat message", (message) => {
             setMessages((prevMessages) => [...prevMessages, message]);
         });
@@ -117,52 +142,79 @@ const Index = () => {
             });
         });
 
-        socket.on("ready", (message)=>{
-            setTempState((prev)=>({
+        socket.on("ready", (message) => {
+            setTempState((prev) => ({
                 ...prev,
-                ready: true
+                ready: true,
             }));
         });
-        socket.on("unready", (message)=>{
-            setTempState((prev)=>({
+        socket.on("unready", (message) => {
+            setTempState((prev) => ({
                 ...prev,
-                ready: false
+                ready: false,
             }));
         });
+
+        socket.on("game start", (_) => {
+            console.log("game start");
+            setState((state) => {
+                return {
+                    ...state,
+                    host: tempState.status === "host",
+                    socket,
+                };
+            });
+            router.push("/game");
+        });
+
         socket.on("error", console.error);
 
+        setTempState((prev) => {
+            return {
+                ...prev,
+                id: socket.id,
+            };
+        });
         setIsRoomFetching(true);
         fetchRoom();
-    }, []);
+    }, [socket]);
 
     const onGameStart = () => {
         socket.emit("start game");
         console.log("game started!");
+        setState((state) => {
+            return {
+                ...state,
+                host: tempState.status === "host",
+                socket,
+            };
+        });
+        router.push("/game");
     };
     const onReady = () => {
         socket.emit("ready");
-        setTempState((prev)=>({
+        setTempState((prev) => ({
             ...prev,
-            ready: true
+            ready: true,
         }));
 
         console.log("ready!");
-    }
+    };
     const onUnready = () => {
         socket.emit("unready");
-        setTempState((prev)=>({
+        setTempState((prev) => ({
             ...prev,
-            ready: false
+            ready: false,
         }));
 
         console.log("unready!");
-    }
+    };
     const joinRoom = (name) => {
         socket.emit("join room", {
             name: name,
             pwd: "",
         });
-        if(tempState.status === undefined){
+        if (tempState.status === undefined) {
             tempState.status = "guest";
             tempState.ready = false;
         }
@@ -199,13 +251,21 @@ const Index = () => {
         // setIsRoomFetching(true);
         // fetchRoom();
         joinRoom(newRoomInfo.name);
+        onReady();
     };
 
     return (
         <div className={styles.container}>
-            <div>
+            <div className={styles.roomsys}>
                 {inRoom ? (
-                    renderRoom(players, tempState, onGameStart, leaveRoom, onReady, onUnready)
+                    renderRoom(
+                        players,
+                        tempState,
+                        onGameStart,
+                        leaveRoom,
+                        onReady,
+                        onUnready
+                    )
                 ) : (
                     <>
                         <h1>Rooms</h1>
