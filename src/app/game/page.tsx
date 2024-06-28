@@ -70,9 +70,9 @@ export default function mainPage() {
 
   const { state } = useMyContext();
 
-  if (!state.socket) {
-    window.location.href = "/";
-  }
+  // if (!state.socket) {
+  //   window.location.href = "/";
+  // }
 
   if (state.socket && !state.host) {
     state.socket.on("map", (message) => {
@@ -162,12 +162,11 @@ export default function mainPage() {
         >
           Submit
         </button>
-
-        <div className={styles.settings}>
-          <Link href="./game/Settings">
-            <button>Settings</button>
-          </Link>
-        </div>
+        <Link href="./game/Settings">
+          <div className={styles.settings}>
+            <button></button>
+          </div>
+        </Link>
       </div>
 
       <div className={styles.canvasContainer}>
